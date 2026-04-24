@@ -1,0 +1,619 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ song.title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Syne+Mono&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: {{ song.accent_color|default:"#c0392b" }};
+      --red: #c0392b;
+      --black: #080808;
+      --near-black: #0f0f0f;
+      --surface: rgba(15,15,15,0.92);
+      --text: #e8e2d9;
+      --muted: #7a7370;
+      --warm: #c8b89a;
+      --line: rgba(200,184,154,0.12);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: var(--black);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── Grain texture ── */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+    }
+
+    /* ── Full bleed background ── */
+    .cover-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .cover-bg img {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 180vmax; height: 180vmax;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      filter: blur(90px) saturate(0.6) brightness(0.22);
+    }
+    .cover-bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(8,8,8,0.7) 0%,
+        rgba(8,8,8,0.3) 50%,
+        rgba(8,8,8,0.85) 100%
+      );
+    }
+
+    /* ── Red glow accent ── */
+    .glow-accent {
+      position: fixed;
+      top: -15vh;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60vw;
+      height: 60vw;
+      max-width: 500px;
+      max-height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(192,57,43,0.12) 0%, transparent 70%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Layout ── */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Cover art — full width, cinematic ── */
+    .art-section {
+      position: relative;
+      width: 100%;
+      animation: reveal 0.8s ease both;
+    }
+    .art {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      filter: brightness(0.92) contrast(1.05);
+    }
+    /* Gradient fade into content */
+    .art-section::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 55%;
+      background: linear-gradient(to bottom, transparent, var(--black));
+    }
+    /* "On Black" style text burned into art overlay */
+    .art-label {
+      position: absolute;
+      bottom: 18px;
+      left: 20px;
+      z-index: 2;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(2.4rem, 10vw, 3.6rem);
+      line-height: 0.9;
+      color: var(--text);
+      text-shadow: 0 2px 24px rgba(0,0,0,0.8);
+      letter-spacing: -0.01em;
+    }
+    .art-label-sub {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2;
+      font-family: 'Syne Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--warm);
+      opacity: 0.75;
+      text-align: right;
+    }
+
+    /* No cover art fallback — text hero ── */
+    .text-hero {
+      padding: 72px 24px 40px;
+      animation: reveal 0.7s ease both;
+    }
+    .eyebrow {
+      font-family: 'Syne Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 14px;
+    }
+    .text-hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(3rem, 12vw, 4.5rem);
+      line-height: 0.9;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+
+    /* ── Content body ── */
+    .content {
+      flex: 1;
+      padding: 32px 24px 56px;
+      animation: fadeUp 0.65s 0.2s ease both;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .meta-artist {
+      font-family: 'Syne Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--warm);
+    }
+    .meta-line {
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+      margin: 0 14px;
+    }
+    .meta-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'Syne Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--red);
+    }
+    .meta-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--red);
+      animation: pulse 2.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .section-label {
+      font-family: 'Syne Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    /* ── Platforms ── */
+    .platforms {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .platforms a {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      background: rgba(255,255,255,0.025);
+      padding: 9px 14px;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .platforms a::after {
+      content: "";
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 1px;
+      background: var(--line);
+      transition: width 0.2s ease, background 0.2s ease;
+    }
+    .platforms a:hover {
+      border-color: rgba(192,57,43,0.3);
+      background: rgba(192,57,43,0.04);
+    }
+    .platforms a:hover::after {
+      width: 24px;
+      background: var(--red);
+    }
+
+    .platform-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      min-height: 38px;
+      padding: 4px 10px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.95);
+    }
+    .platform-logo {
+      display: block;
+      max-height: 28px;
+      max-width: min(100%, 190px);
+      width: auto; height: auto;
+      object-fit: contain;
+    }
+    .platform-label-fallback {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #111;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Footer ── */
+    .foot {
+      padding-top: 32px;
+      font-family: 'Syne Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.5;
+    }
+    .foot span {
+      color: var(--red);
+      opacity: 1;
+    }
+
+    /* ── Animations ── */
+    @keyframes reveal {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════════
+       GATE DIALOG
+    ══════════════════════════════ */
+    dialog.gate-dialog {
+      z-index: 100;
+      width: min(420px, calc(100vw - 28px));
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      margin: auto;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(12,12,12,0.98);
+      color: var(--text);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.85), 0 0 0 1px rgba(192,57,43,0.08) inset;
+      font-family: 'Syne', sans-serif;
+    }
+    dialog.gate-dialog::backdrop {
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(6px);
+    }
+    .gate-inner {
+      padding: 28px 24px 24px;
+    }
+    .gate-eyebrow {
+      font-family: 'Syne Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 10px;
+    }
+    .gate-inner h2 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.85rem;
+      line-height: 1;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+    .gate-inner .lead {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .gate-inner label {
+      display: block;
+      font-family: 'Syne Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 14px 0 6px;
+    }
+    .gate-inner input {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 3px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.95rem;
+      transition: border-color 0.15s;
+    }
+    .gate-inner input:focus {
+      outline: none;
+      border-color: rgba(192,57,43,0.4);
+    }
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .gate-actions button {
+      flex: 1;
+      padding: 13px 14px;
+      border-radius: 3px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+    .gate-actions button:hover { color: var(--text); border-color: rgba(200,184,154,0.25); }
+    .gate-actions button.primary {
+      border-color: rgba(192,57,43,0.5);
+      background: rgba(192,57,43,0.12);
+      color: var(--text);
+    }
+    .gate-actions button.primary:hover {
+      background: rgba(192,57,43,0.22);
+    }
+    .gate-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .gate-cancel-row {
+      margin-top: 12px;
+      text-align: center;
+    }
+    .gate-cancel-row button {
+      font-family: 'Syne Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .gate-cancel-row button:hover { color: var(--text); }
+    .gate-err {
+      font-family: 'Syne Mono', monospace;
+      font-size: 11px;
+      color: #e07070;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  {% if song.cover_art %}
+  <div class="cover-bg" aria-hidden="true">
+    <img src="{{ song.cover_art.url }}" alt="" decoding="async" fetchpriority="high">
+  </div>
+  {% endif %}
+
+  <div class="glow-accent" aria-hidden="true"></div>
+
+  <div class="wrap">
+    {% if song.cover_art %}
+    <div class="art-section">
+      <img class="art" src="{{ song.cover_art.url }}" alt="{{ song.title }}" fetchpriority="high">
+      <div class="art-label">{{ song.title }}</div>
+      <div class="art-label-sub">{{ song.artist|default:"'Stro Ifidon" }}</div>
+    </div>
+    {% else %}
+    <div class="text-hero">
+      <div class="eyebrow">'Stro Ifidon · On Black</div>
+      <h1>{{ song.title }}</h1>
+    </div>
+    {% endif %}
+
+    <div class="content">
+      <div class="meta-row">
+        <span class="meta-artist">{{ song.artist|default:"'Stro Ifidon" }}</span>
+        <div class="meta-line"></div>
+        <span class="meta-status">
+          <span class="meta-dot"></span>
+          Out Now
+        </span>
+      </div>
+
+      <div class="section-label">Stream</div>
+
+      <div class="platforms">
+        {% for row in platform_rows %}
+          {% if gate_unlocked %}
+            <a href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}" aria-label="{{ row.platform.label }}">
+              <span class="platform-inner">
+                {% if row.logo %}
+                  <img class="platform-logo" src="{% static row.logo %}" alt="{{ row.platform.label }}" width="190" height="28" decoding="async">
+                {% else %}
+                  <span class="platform-label-fallback">{{ row.platform.label }}</span>
+                {% endif %}
+              </span>
+            </a>
+          {% else %}
+            <a href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}" class="gate-link" aria-label="{{ row.platform.label }}" data-dest-label="{{ row.platform.label }}" data-outbound-url="{{ row.url }}">
+              <span class="platform-inner">
+                {% if row.logo %}
+                  <img class="platform-logo" src="{% static row.logo %}" alt="" width="190" height="28" decoding="async" aria-hidden="true">
+                {% else %}
+                  <span class="platform-label-fallback">{{ row.platform.label }}</span>
+                {% endif %}
+              </span>
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <p class="foot"><span>On Black</span> · Hollywood.stro · Don Productions</p>
+    </div>
+  </div>
+
+  {% if not gate_unlocked %}
+  <dialog id="gate-modal" class="gate-dialog" aria-labelledby="gate-title">
+    <div class="gate-inner">
+      <div class="gate-eyebrow">Join the list</div>
+      <h2 id="gate-title">Stay connected</h2>
+      <p class="lead" id="gate-lead"></p>
+      <form id="gate-form" method="post">
+        {% csrf_token %}
+        <label for="gate-email">Email</label>
+        <input id="gate-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <label for="gate-name">Name</label>
+        <input id="gate-name" name="name" type="text" autocomplete="name" required placeholder="Your name">
+        <div class="gate-actions">
+          <button type="button" id="gate-maybe-later">Skip</button>
+          <button type="submit" class="primary" id="gate-submit">Save &amp; continue</button>
+        </div>
+        <div class="gate-cancel-row">
+          <button type="button" id="gate-cancel">Cancel</button>
+        </div>
+        <div class="gate-err" id="gate-errors" hidden></div>
+      </form>
+    </div>
+  </dialog>
+  <script>
+(function () {
+  const modal = document.getElementById("gate-modal");
+  const form = document.getElementById("gate-form");
+  const lead = document.getElementById("gate-lead");
+  const errBox = document.getElementById("gate-errors");
+  const cancel = document.getElementById("gate-cancel");
+  let postUrl = "";
+  let outboundUrl = "";
+
+  function showErr(msg) { errBox.textContent = msg; errBox.hidden = !msg; }
+
+  function readCookie(name) {
+    var parts = ("; " + document.cookie).split("; " + name + "=");
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
+  }
+
+  function openModal(url, destLabel, directUrl) {
+    postUrl = url;
+    outboundUrl = directUrl || "";
+    lead.innerHTML = "Join the list and continue to <strong>" + destLabel + "</strong> for this release.";
+    var ml = document.getElementById("gate-maybe-later");
+    if (ml) {
+      ml.textContent = outboundUrl ? "Skip" : "Maybe later";
+      ml.disabled = !outboundUrl;
+    }
+    showErr("");
+    var email = document.getElementById("gate-email");
+    var name = document.getElementById("gate-name");
+    var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
+    email.value = ""; name.value = "";
+    if (csrfIn) {
+      var fromCookie = readCookie("csrftoken");
+      if (fromCookie) csrfIn.value = fromCookie;
+    }
+    try {
+      if (modal && typeof modal.showModal === "function") { modal.showModal(); email.focus(); }
+      else { window.location.href = url; }
+    } catch(err) { window.location.href = url; }
+  }
+
+  document.querySelectorAll("a.gate-link").forEach(function(a) {
+    a.addEventListener("click", function(e) {
+      e.preventDefault();
+      openModal(a.getAttribute("href"), a.dataset.destLabel || a.getAttribute("aria-label") || "", a.dataset.outboundUrl || "");
+    });
+  });
+
+  document.getElementById("gate-maybe-later").addEventListener("click", function() {
+    if (outboundUrl) { if (modal && typeof modal.close === "function") modal.close(); window.location.href = outboundUrl; }
+  });
+
+  cancel.addEventListener("click", function() { if (modal && typeof modal.close === "function") modal.close(); });
+
+  form.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    showErr("");
+    var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
+    var fromCookie = readCookie("csrftoken");
+    if (csrfIn && fromCookie) csrfIn.value = fromCookie;
+    var fd = new FormData(form);
+    var submitBtn = document.getElementById("gate-submit");
+    submitBtn.disabled = true;
+    try {
+      var r = await fetch(postUrl, { method: "POST", body: fd, headers: { "X-Requested-With": "XMLHttpRequest", "X-CSRFToken": fromCookie || (csrfIn ? csrfIn.value : "") }, credentials: "same-origin" });
+      var data = await r.json().catch(function() { return {}; });
+      if (r.ok && data.redirect) { window.location.href = data.redirect; return; }
+      var parts = [];
+      if (data.errors) { Object.keys(data.errors).forEach(function(k) { (data.errors[k] || []).forEach(function(m) { parts.push(m); }); }); }
+      if (r.status === 403) { showErr("Session expired — refresh and try again."); }
+      else { showErr(parts.length ? parts.join(" ") : "Something went wrong. Try again."); }
+    } catch(ex) { showErr("Network error. Try again."); }
+    finally { submitBtn.disabled = false; }
+  });
+})();
+  </script>
+  {% endif %}
+</body>
+</html>

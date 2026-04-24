@@ -14,6 +14,11 @@ class MusicPlatform(models.TextChoices):
     DEEZER = "deezer", "Deezer"
 
 
+class LandingTemplate(models.TextChoices):
+    MODERN = "modern", "Modern"
+    MINIMAL = "minimal", "Minimal"
+
+
 class Song(models.Model):
     """One smart-link landing page per song."""
 
@@ -24,6 +29,12 @@ class Song(models.Model):
         max_length=7,
         default="#6366f1",
         help_text="Hex color for the landing template (e.g. #7c3aed).",
+    )
+    landing_template = models.CharField(
+        max_length=16,
+        choices=LandingTemplate.choices,
+        default=LandingTemplate.MODERN,
+        help_text="Choose which smart-link layout to render for this song.",
     )
 
     # TextField (not URLField): distro smart links can exceed URLField limits and the admin

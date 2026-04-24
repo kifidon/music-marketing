@@ -118,7 +118,19 @@ class SongAdmin(admin.ModelAdmin):
         "release_notification_task_id",
     )
     fieldsets = (
-        (None, {"fields": ("title", "slug", "cover_art", "accent_color", "is_published")}),
+        (
+            None,
+            {
+                "fields": (
+                    "title",
+                    "slug",
+                    "cover_art",
+                    "accent_color",
+                    "landing_template",
+                    "is_published",
+                )
+            },
+        ),
         (
             "Import from distro / presave page",
             {

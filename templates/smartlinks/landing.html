@@ -5,25 +5,43 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ song.title }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --accent: {{ song.accent_color|default:"#6366f1" }};
-      --card: rgba(16, 19, 26, 0.82);
-      --text: #f4f5f7;
-      --muted: #c4c9d4;
+      --accent: {{ song.accent_color|default:"#f5c800" }};
+      --blue: #2b7fc4;
+      --yellow: #f5c800;
+      --navy: #0a0d14;
+      --card-bg: rgba(10, 13, 20, 0.88);
+      --text: #f0f2f7;
+      --muted: #8a92a8;
+      --border: rgba(245, 200, 0, 0.22);
     }
-    * { box-sizing: border-box; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      margin: 0;
       min-height: 100vh;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+      background: var(--navy);
       color: var(--text);
-      background: #08080a;
+      font-family: 'Barlow Condensed', sans-serif;
+      overflow-x: hidden;
     }
-    body.has-cover-bg {
-      background: #000;
+
+    /* ── Noise grain overlay ── */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.55;
     }
-    /* Huge blurred cover as the page background */
+
+    /* ── Full bleed blurred cover background ── */
     .cover-bg {
       position: fixed;
       inset: 0;
@@ -33,182 +51,393 @@
     }
     .cover-bg img {
       position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 160vmax;
-      height: 160vmax;
-      min-width: 100%;
-      min-height: 100%;
+      left: 50%; top: 50%;
+      width: 180vmax; height: 180vmax;
       transform: translate(-50%, -50%);
       object-fit: cover;
-      filter: blur(72px) saturate(1.12) brightness(0.5);
+      filter: blur(80px) saturate(1.4) brightness(0.35);
     }
     .cover-bg::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.42);
+      background: linear-gradient(
+        180deg,
+        rgba(10,13,20,0.5) 0%,
+        rgba(10,13,20,0.2) 40%,
+        rgba(10,13,20,0.75) 100%
+      );
     }
+
+    /* ── Decorative stripe lines (street energy) ── */
+    .deco-lines {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .deco-lines::before {
+      content: "";
+      position: absolute;
+      top: -20%; left: -10%;
+      width: 3px;
+      height: 140%;
+      background: linear-gradient(180deg, transparent, var(--yellow), transparent);
+      opacity: 0.15;
+      transform: rotate(-12deg);
+    }
+    .deco-lines::after {
+      content: "";
+      position: absolute;
+      top: -20%; right: 8%;
+      width: 2px;
+      height: 140%;
+      background: linear-gradient(180deg, transparent, var(--blue), transparent);
+      opacity: 0.18;
+      transform: rotate(-12deg);
+    }
+
+    /* ── Layout ── */
     .wrap {
       position: relative;
       z-index: 1;
-      max-width: 420px;
+      max-width: 440px;
       margin: 0 auto;
-      padding: 48px 20px 64px;
+      padding: 52px 20px 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .card {
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid color-mix(in srgb, var(--accent) 28%, rgba(255,255,255,0.12));
-      border-radius: 24px;
-      padding: 28px 22px 26px;
-      box-shadow:
-        0 24px 80px rgba(0, 0, 0, 0.45),
-        0 0 0 1px rgba(255,255,255,0.04) inset;
+
+    /* ── Tag / badge ── */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--yellow);
+      color: var(--navy);
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 5px 12px 4px;
+      border-radius: 2px;
+      margin-bottom: 22px;
+      animation: fadeDown 0.5s ease both;
+    }
+    .tag-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--navy);
+      animation: pulse 2s ease infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Cover art ── */
+    .art-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 340px;
+      margin-bottom: 28px;
+      animation: fadeUp 0.55s 0.1s ease both;
+    }
+    .art-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--yellow) 0%, var(--blue) 100%);
+      z-index: 0;
     }
     .art {
+      position: relative;
+      z-index: 1;
       width: 100%;
       aspect-ratio: 1;
-      border-radius: 16px;
       object-fit: cover;
       display: block;
-      margin: 0 auto 20px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+      border-radius: 4px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    }
+    /* Corner accent */
+    .art-wrap::after {
+      content: "";
+      position: absolute;
+      bottom: -12px;
+      right: -12px;
+      width: 48px;
+      height: 48px;
+      background: var(--yellow);
+      border-radius: 2px;
+      z-index: 0;
+      opacity: 0.7;
+    }
+
+    /* ── Title block ── */
+    .title-block {
+      width: 100%;
+      max-width: 340px;
+      margin-bottom: 32px;
+      animation: fadeUp 0.55s 0.2s ease both;
+    }
+    .artist-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 6px;
     }
     h1 {
-      font-size: 1.55rem;
-      line-height: 1.2;
-      margin: 0 0 6px;
-      text-align: center;
-      letter-spacing: -0.02em;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.8rem, 10vw, 4rem);
+      line-height: 0.95;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    h1 span {
+      color: var(--yellow);
     }
     .sub {
-      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
       color: var(--muted);
-      font-size: 0.95rem;
-      margin: 0 0 22px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
+
+    /* ── Divider ── */
+    .divider {
+      width: 100%;
+      max-width: 340px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.55s 0.25s ease both;
+    }
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(245,200,0,0.3), transparent);
+    }
+    .divider-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Platforms ── */
     .platforms {
+      width: 100%;
+      max-width: 340px;
       display: flex;
       flex-direction: column;
       gap: 10px;
+      animation: fadeUp 0.55s 0.3s ease both;
     }
+
     .platforms a {
       display: flex;
       align-items: center;
       justify-content: center;
       text-decoration: none;
-      padding: 10px 14px;
-      border-radius: 14px;
-      font-weight: 600;
-      color: var(--text);
-      border: 1px solid color-mix(in srgb, var(--accent) 35%, #2a3142);
-      background: color-mix(in srgb, var(--accent) 14%, #0c0e14);
-      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 4px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 10px 16px;
+      transition: all 0.18s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .platforms a::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--yellow);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.18s ease;
     }
     .platforms a:hover {
-      transform: translateY(-1px);
-      border-color: color-mix(in srgb, var(--accent) 55%, #2a3142);
-      background: color-mix(in srgb, var(--accent) 22%, #0c0e14);
+      border-color: rgba(245,200,0,0.3);
+      background: rgba(245,200,0,0.07);
+      transform: translateX(4px);
     }
-    .platforms .platform-inner {
+    .platforms a:hover::before {
+      transform: scaleY(1);
+    }
+
+    .platform-inner {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100%;
-      min-height: 44px;
-      padding: 6px 12px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.96);
-      box-shadow: 0 1px 0 rgba(0,0,0,0.06) inset;
+      min-height: 40px;
+      padding: 5px 10px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.95);
     }
-    .platforms .platform-logo {
+    .platform-logo {
       display: block;
-      max-height: 34px;
-      max-width: min(100%, 220px);
-      width: auto;
-      height: auto;
+      max-height: 30px;
+      max-width: min(100%, 200px);
+      width: auto; height: auto;
       object-fit: contain;
     }
-    .platforms .platform-label-fallback {
-      font-size: 0.95rem;
+    .platform-label-fallback {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
       color: #111;
-    }
-    .foot {
-      margin-top: 18px;
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-      opacity: 0.85;
+      text-transform: uppercase;
     }
 
+    /* ── Footer ── */
+    .foot {
+      margin-top: 32px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.6;
+      text-align: center;
+      animation: fadeUp 0.55s 0.4s ease both;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ══════════════════════════════
+       GATE DIALOG
+    ══════════════════════════════ */
     dialog.gate-dialog {
       z-index: 100;
-      width: min(420px, calc(100vw - 32px));
+      width: min(420px, calc(100vw - 28px));
       max-height: calc(100vh - 32px);
+      overflow-y: auto;
       margin: auto;
       padding: 0;
-      border: none;
-      border-radius: 20px;
-      background: rgba(16, 19, 26, 0.94);
+      border: 1px solid rgba(245,200,0,0.25);
+      border-radius: 6px;
+      background: rgba(10, 13, 20, 0.97);
       color: var(--text);
-      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(245,200,0,0.08) inset;
+      font-family: 'Barlow Condensed', sans-serif;
     }
     dialog.gate-dialog::backdrop {
-      background: rgba(0,0,0,0.65);
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
     }
     .gate-inner {
-      padding: 22px 20px 20px;
+      padding: 28px 24px 24px;
+    }
+    .gate-badge {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--yellow);
+      border: 1px solid rgba(245,200,0,0.3);
+      padding: 3px 8px;
+      border-radius: 2px;
+      margin-bottom: 12px;
     }
     .gate-inner h2 {
-      margin: 0 0 8px;
-      font-size: 1.25rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 0.02em;
+      margin: 0 0 6px;
+      line-height: 1;
     }
     .gate-inner .lead {
-      margin: 0 0 16px;
+      margin: 0 0 20px;
       color: var(--muted);
-      font-size: 0.95rem;
-      line-height: 1.45;
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.4;
+      letter-spacing: 0.02em;
     }
     .gate-inner label {
       display: block;
-      margin: 12px 0 6px;
-      font-size: 13px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
       color: var(--muted);
+      margin: 14px 0 6px;
     }
     .gate-inner input {
       width: 100%;
-      padding: 12px 12px;
-      border-radius: 12px;
-      border: 1px solid #2a3142;
-      background: #0c0e14;
+      padding: 13px 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04);
       color: var(--text);
       font: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: border-color 0.15s;
+    }
+    .gate-inner input:focus {
+      outline: none;
+      border-color: rgba(245,200,0,0.5);
     }
     .gate-actions {
       display: flex;
       gap: 10px;
-      margin-top: 18px;
+      margin-top: 20px;
     }
     .gate-actions button {
       flex: 1;
-      padding: 12px 14px;
-      border-radius: 12px;
-      font: inherit;
-      font-weight: 600;
+      padding: 13px 14px;
+      border-radius: 4px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
       cursor: pointer;
-      border: 1px solid #2a3142;
-      background: #151922;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
       color: var(--text);
+      transition: all 0.15s;
+    }
+    .gate-actions button:hover {
+      background: rgba(255,255,255,0.1);
     }
     .gate-actions button.primary {
       border: none;
-      background: var(--accent);
-      color: #0b1220;
+      background: var(--yellow);
+      color: var(--navy);
+    }
+    .gate-actions button.primary:hover {
+      background: #ffd700;
     }
     .gate-actions button:disabled {
-      opacity: 0.45;
+      opacity: 0.4;
       cursor: not-allowed;
     }
     .gate-cancel-row {
@@ -216,85 +445,105 @@
       text-align: center;
     }
     .gate-cancel-row button {
-      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
       padding: 8px 12px;
       border: none;
-      border-radius: 10px;
-      font: inherit;
-      font-size: 0.88rem;
-      font-weight: 500;
-      cursor: pointer;
-      color: var(--muted);
       background: transparent;
+      color: var(--muted);
+      cursor: pointer;
       text-decoration: underline;
       text-underline-offset: 3px;
     }
-    .gate-cancel-row button:hover {
-      color: var(--text);
-    }
+    .gate-cancel-row button:hover { color: var(--text); }
     .gate-err {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
       color: #f9b4b4;
-      font-size: 14px;
       margin-top: 10px;
     }
   </style>
 </head>
 <body class="{% if song.cover_art %}has-cover-bg{% endif %}">
+
   {% if song.cover_art %}
   <div class="cover-bg" aria-hidden="true">
     <img src="{{ song.cover_art.url }}" alt="" decoding="async" fetchpriority="high">
   </div>
   {% endif %}
+
+  <div class="deco-lines" aria-hidden="true"></div>
+
   <div class="wrap">
-    <div class="card">
-      {% if song.cover_art %}
-        <img class="art" src="{{ song.cover_art.url }}" alt="">
-      {% endif %}
-      <h1>{{ song.title }}</h1>
-      <p class="sub">Choose where to listen.</p>
-      <div class="platforms">
-        {% for row in platform_rows %}
-          {% if gate_unlocked %}
-            <a href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}" aria-label="{{ row.platform.label }}">
-              <span class="platform-inner">
-                {% if row.logo %}
-                  <img class="platform-logo" src="{% static row.logo %}" alt="{{ row.platform.label }}" width="220" height="40" decoding="async">
-                {% else %}
-                  <span class="platform-label-fallback">{{ row.platform.label }}</span>
-                {% endif %}
-              </span>
-            </a>
-          {% else %}
-            <a href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}" class="gate-link" aria-label="{{ row.platform.label }}" data-dest-label="{{ row.platform.label }}" data-outbound-url="{{ row.url }}">
-              <span class="platform-inner">
-                {% if row.logo %}
-                  <img class="platform-logo" src="{% static row.logo %}" alt="" width="220" height="40" decoding="async" aria-hidden="true">
-                {% else %}
-                  <span class="platform-label-fallback">{{ row.platform.label }}</span>
-                {% endif %}
-              </span>
-            </a>
-          {% endif %}
-        {% endfor %}
-      </div>
+    <div class="tag">
+      <span class="tag-dot"></span>
+      Now Streaming
     </div>
-    <p class="foot">Template preview — styling will be refined together.</p>
+
+    {% if song.cover_art %}
+    <div class="art-wrap">
+      <img class="art" src="{{ song.cover_art.url }}" alt="{{ song.title }}">
+    </div>
+    {% endif %}
+
+    <div class="title-block">
+      <p class="artist-name">{{ song.artist|default:"That Kid 104" }}</p>
+      <h1>{{ song.title|default:"New <span>Drop</span>" }}</h1>
+      <p class="sub">Choose your platform</p>
+    </div>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span class="divider-text">Listen Now</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="platforms">
+      {% for row in platform_rows %}
+        {% if gate_unlocked %}
+          <a href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}" aria-label="{{ row.platform.label }}">
+            <span class="platform-inner">
+              {% if row.logo %}
+                <img class="platform-logo" src="{% static row.logo %}" alt="{{ row.platform.label }}" width="200" height="30" decoding="async">
+              {% else %}
+                <span class="platform-label-fallback">{{ row.platform.label }}</span>
+              {% endif %}
+            </span>
+          </a>
+        {% else %}
+          <a href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}" class="gate-link" aria-label="{{ row.platform.label }}" data-dest-label="{{ row.platform.label }}" data-outbound-url="{{ row.url }}">
+            <span class="platform-inner">
+              {% if row.logo %}
+                <img class="platform-logo" src="{% static row.logo %}" alt="" width="200" height="30" decoding="async" aria-hidden="true">
+              {% else %}
+                <span class="platform-label-fallback">{{ row.platform.label }}</span>
+              {% endif %}
+            </span>
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <p class="foot">That Kid 104 · Don Productions</p>
   </div>
 
   {% if not gate_unlocked %}
   <dialog id="gate-modal" class="gate-dialog" aria-labelledby="gate-title">
     <div class="gate-inner">
-      <h2 id="gate-title">Forever save</h2>
+      <div class="gate-badge">Exclusive Access</div>
+      <h2 id="gate-title">Save the Drop</h2>
       <p class="lead" id="gate-lead"></p>
       <form id="gate-form" method="post">
         {% csrf_token %}
-        <label for="gate-email">Email</label>
+        <label for="gate-email">Email Address</label>
         <input id="gate-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
-        <label for="gate-name">Name</label>
+        <label for="gate-name">Your Name</label>
         <input id="gate-name" name="name" type="text" autocomplete="name" required placeholder="Your name">
         <div class="gate-actions">
-          <button type="button" id="gate-maybe-later">Maybe later</button>
-          <button type="submit" class="primary" id="gate-submit">Save &amp; continue</button>
+          <button type="button" id="gate-maybe-later">Skip</button>
+          <button type="submit" class="primary" id="gate-submit">Save &amp; Go</button>
         </div>
         <div class="gate-cancel-row">
           <button type="button" id="gate-cancel">Cancel</button>
@@ -313,10 +562,7 @@
   let postUrl = "";
   let outboundUrl = "";
 
-  function showErr(msg) {
-    errBox.textContent = msg;
-    errBox.hidden = !msg;
-  }
+  function showErr(msg) { errBox.textContent = msg; errBox.hidden = !msg; }
 
   function readCookie(name) {
     var parts = ("; " + document.cookie).split("; " + name + "=");
@@ -330,56 +576,38 @@
     lead.innerHTML = "Join the list and continue to <strong>" + destLabel + "</strong> for this release.";
     var ml = document.getElementById("gate-maybe-later");
     if (ml) {
-      ml.textContent = outboundUrl ? ("Maybe later — skip to " + destLabel) : "Maybe later";
+      ml.textContent = outboundUrl ? "Skip" : "Maybe later";
       ml.disabled = !outboundUrl;
     }
     showErr("");
     var email = document.getElementById("gate-email");
     var name = document.getElementById("gate-name");
     var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
-    var csrfVal = csrfIn ? csrfIn.value : "";
-    email.value = "";
-    name.value = "";
+    email.value = ""; name.value = "";
     if (csrfIn) {
       var fromCookie = readCookie("csrftoken");
       if (fromCookie) csrfIn.value = fromCookie;
-      else if (csrfVal) csrfIn.value = csrfVal;
     }
     try {
-      if (modal && typeof modal.showModal === "function") {
-        modal.showModal();
-        email.focus();
-      } else {
-        window.location.href = url;
-      }
-    } catch (err) {
-      window.location.href = url;
-    }
+      if (modal && typeof modal.showModal === "function") { modal.showModal(); email.focus(); }
+      else { window.location.href = url; }
+    } catch(err) { window.location.href = url; }
   }
 
-  document.querySelectorAll("a.gate-link").forEach(function (a) {
-    a.addEventListener("click", function (e) {
+  document.querySelectorAll("a.gate-link").forEach(function(a) {
+    a.addEventListener("click", function(e) {
       e.preventDefault();
-      openModal(
-        a.getAttribute("href"),
-        a.dataset.destLabel || a.getAttribute("aria-label") || "",
-        a.dataset.outboundUrl || ""
-      );
+      openModal(a.getAttribute("href"), a.dataset.destLabel || a.getAttribute("aria-label") || "", a.dataset.outboundUrl || "");
     });
   });
 
-  document.getElementById("gate-maybe-later").addEventListener("click", function () {
-    if (outboundUrl) {
-      if (modal && typeof modal.close === "function") modal.close();
-      window.location.href = outboundUrl;
-    }
+  document.getElementById("gate-maybe-later").addEventListener("click", function() {
+    if (outboundUrl) { if (modal && typeof modal.close === "function") modal.close(); window.location.href = outboundUrl; }
   });
 
-  cancel.addEventListener("click", function () {
-    if (modal && typeof modal.close === "function") modal.close();
-  });
+  cancel.addEventListener("click", function() { if (modal && typeof modal.close === "function") modal.close(); });
 
-  form.addEventListener("submit", async function (e) {
+  form.addEventListener("submit", async function(e) {
     e.preventDefault();
     showErr("");
     var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
@@ -389,36 +617,15 @@
     var submitBtn = document.getElementById("gate-submit");
     submitBtn.disabled = true;
     try {
-      var r = await fetch(postUrl, {
-        method: "POST",
-        body: fd,
-        headers: {
-          "X-Requested-With": "XMLHttpRequest",
-          "X-CSRFToken": fromCookie || (csrfIn ? csrfIn.value : "")
-        },
-        credentials: "same-origin",
-      });
-      var data = await r.json().catch(function () { return {}; });
-      if (r.ok && data.redirect) {
-        window.location.href = data.redirect;
-        return;
-      }
+      var r = await fetch(postUrl, { method: "POST", body: fd, headers: { "X-Requested-With": "XMLHttpRequest", "X-CSRFToken": fromCookie || (csrfIn ? csrfIn.value : "") }, credentials: "same-origin" });
+      var data = await r.json().catch(function() { return {}; });
+      if (r.ok && data.redirect) { window.location.href = data.redirect; return; }
       var parts = [];
-      if (data.errors) {
-        Object.keys(data.errors).forEach(function (k) {
-          (data.errors[k] || []).forEach(function (m) { parts.push(m); });
-        });
-      }
-      if (r.status === 403) {
-        showErr("Session expired — refresh the page and try again.");
-      } else {
-        showErr(parts.length ? parts.join(" ") : "Something went wrong. Try again.");
-      }
-    } catch (ex) {
-      showErr("Network error. Try again.");
-    } finally {
-      submitBtn.disabled = false;
-    }
+      if (data.errors) { Object.keys(data.errors).forEach(function(k) { (data.errors[k] || []).forEach(function(m) { parts.push(m); }); }); }
+      if (r.status === 403) { showErr("Session expired — refresh and try again."); }
+      else { showErr(parts.length ? parts.join(" ") : "Something went wrong. Try again."); }
+    } catch(ex) { showErr("Network error. Try again."); }
+    finally { submitBtn.disabled = false; }
   });
 })();
   </script>

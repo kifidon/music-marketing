@@ -10,6 +10,7 @@ from .forms import FanOptInForm
 from .models import (
     Fan,
     FanGateSubmission,
+    LandingTemplate,
     LandingPageView,
     MusicPlatform,
     OutboundLinkClick,
@@ -75,9 +76,14 @@ def landing(request, slug: str):
             clear_fan_unlock_for_song(request, song.id)
             return redirect("smartlinks:landing", slug=slug)
     _log_landing_view(request, song)
+    template_name = (
+        "smartlinks/landing_minimal.html"
+        if song.landing_template == LandingTemplate.MINIMAL
+        else "smartlinks/landing.html"
+    )
     return render(
         request,
-        "smartlinks/landing.html",
+        template_name,
         {
             "song": song,
             "platform_rows": _platform_rows(song),
