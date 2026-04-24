@@ -8,4 +8,8 @@ from .models import User
 class UserAdmin(DjangoUserAdmin):
     fieldsets = DjangoUserAdmin.fieldsets + (
         ("Regional", {"fields": ("timezone",)}),
+        (
+            "Artist profile",
+            {"fields": ("artist_name", "instagram", "tiktok", "youtube")},
+        ),
     )

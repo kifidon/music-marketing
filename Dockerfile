@@ -14,11 +14,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# With ``DJANGO_DEBUG=0``, ``DATABASE_URL`` must be available at image build (e.g. build-arg / CI env).
+# collectstatic only: use DJANGO_DEBUG=1 so Django can import settings without DATABASE_URL (SQLite).
+# Migrations run at container start in scripts/start_production.sh when real env vars are present.
 RUN chmod +x scripts/start_production.sh \
-    && DJANGO_DEBUG=0 DJANGO_SECRET_KEY=collectstatic-placeholder \
-    python manage.py collectstatic --noinput \
-    && python manage.py migrate --noinput 
+    && DJANGO_DEBUG=1 DJANGO_SECRET_KEY=collectstatic-placeholder \
+    python manage.py collectstatic --noinput
 
 EXPOSE 8000
 

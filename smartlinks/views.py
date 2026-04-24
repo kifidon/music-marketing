@@ -81,6 +81,11 @@ def landing(request, slug: str):
         if song.landing_template == LandingTemplate.MINIMAL
         else "smartlinks/landing.html"
     )
+    recent_releases = list(
+        Song.objects.filter(is_published=True)
+        .exclude(pk=song.pk)
+        .order_by("-created_at")[:2]
+    )
     return render(
         request,
         template_name,
@@ -88,6 +93,7 @@ def landing(request, slug: str):
             "song": song,
             "platform_rows": _platform_rows(song),
             "gate_unlocked": bool(fan_id_for_song(request, song.id)),
+            "recent_releases": recent_releases,
         },
     )
 
