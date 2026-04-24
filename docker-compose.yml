@@ -1,38 +1,29 @@
-# Copy .env.example -> .env and set POSTGRES_PASSWORD + DJANGO_SECRET_KEY before production.
-# Compose reads .env from this directory for ${VAR} substitution (do not commit .env).
+# Copy `.prod.env` to `.env` or set vars in the shell. Compose reads `.env` for ${VAR} substitution.
 
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-music}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-music}
-      POSTGRES_DB: ${POSTGRES_DB:-music}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+  redis:
+    image: redis:7-alpine
     ports:
-      - "5432:5432"
+      - "6379:6379"
 
   web:
     build: .
-    command: >
-      sh -c "python manage.py migrate --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    command: scripts/start_production.sh
     environment:
       DJANGO_DEBUG: ${DJANGO_DEBUG:-0}
       DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,web}
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me}
       DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-}
-      # Built from the same credentials as `db` (keep .env in sync).
-      DATABASE_URL: postgres://${POSTGRES_USER:-music}:${POSTGRES_PASSWORD:-music}@db:5432/${POSTGRES_DB:-music}
+      DATABASE_URL: ${DATABASE_URL:-}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
       SERVE_UPLOADS: ${SERVE_UPLOADS:-1}
     volumes:
       - media:/app/media
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - redis
 
 volumes:
-  pgdata:
   media:

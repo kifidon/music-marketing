@@ -6,6 +6,6 @@ from .models import User
 
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
-    """Default admin behavior; extend fieldsets/list_display when you add fields."""
-
-    pass
+    fieldsets = DjangoUserAdmin.fieldsets + (
+        ("Regional", {"fields": ("timezone",)}),
+    )

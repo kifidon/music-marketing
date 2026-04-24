@@ -14,9 +14,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN DJANGO_DEBUG=0 DJANGO_SECRET_KEY=collectstatic-placeholder \
+RUN chmod +x scripts/start_production.sh \
+    && DJANGO_DEBUG=0 DJANGO_SECRET_KEY=collectstatic-placeholder \
     python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["scripts/start_production.sh"]

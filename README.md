@@ -6,8 +6,8 @@ Auth uses a custom **`users.User`** model (`AbstractUser`). Extend `users.models
 
 ## Database
 
-- **Docker / Oracle VM:** set `DATABASE_URL` to Postgres (see `docker-compose.yml`). The app never uses SQLite in that setup.
-- **Local without Docker:** if `DATABASE_URL` is omitted, Django falls back to **`db.sqlite3`** so you can run migrations quickly. That file is not for production or multi-process servers.
+- **`DJANGO_DEBUG=1`:** Django always uses **`db.sqlite3`** (ignores `DATABASE_URL`). For local dev only.
+- **`DJANGO_DEBUG=0`:** requires Postgres **`DATABASE_URL`** (e.g. Supabase).
 
 ## Run locally (SQLite fallback)
 
@@ -15,7 +15,8 @@ Auth uses a custom **`users.User`** model (`AbstractUser`). Extend `users.models
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+cp .prod.env .env
+# Local SQLite: set DJANGO_DEBUG=1 in `.env` (prod template uses DJANGO_DEBUG=0).
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
@@ -47,15 +48,9 @@ docker compose up --build
 
 Run the `web` container (or Gunicorn) behind Nginx, proxy to port 8000, set `DJANGO_ALLOWED_HOSTS` and `DJANGO_CSRF_TRUSTED_ORIGINS` to your domain, keep Postgres on the same host or managed instance, and persist the `media` volume (or local path) for cover art.
 
-## Production `.env` (secrets, not in git)
+## Environment (secrets, not in git)
 
-`docker-compose.yml` reads **`POSTGRES_*`** and **`DJANGO_*`** from a **`.env`** file next to it (Compose loads it for `${VAR}` substitution). **Never commit `.env`.** Copy from `.env.example` on the server and set:
-
-- `POSTGRES_PASSWORD` — strong secret (see `.env.example` for characters that break URL interpolation).
-- `DJANGO_SECRET_KEY` — strong secret.
-- `DJANGO_ALLOWED_HOSTS` and `DJANGO_CSRF_TRUSTED_ORIGINS` — your real domain(s).
-
-The `web` service **`DATABASE_URL`** is built from the same `POSTGRES_*` values as the `db` service so credentials stay in one place.
+Keep a private **`.prod.env`** (see `.gitignore`; do not commit filled secrets). For Docker Compose, copy it to **`.env`** in the repo root so Compose can substitute variables. Set at least **`DJANGO_SECRET_KEY`**, **`DATABASE_URL`** (Supabase), **`DJANGO_ALLOWED_HOSTS`**, **`DJANGO_CSRF_TRUSTED_ORIGINS`**, and **`CELERY_*`** (Redis) for production.
 
 ## Backups (do not rely on the VM disk alone)
 

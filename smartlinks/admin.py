@@ -1,7 +1,11 @@
+from datetime import timezone as dt_timezone
+from zoneinfo import ZoneInfo
+
 from django import forms
 from django.contrib import admin, messages
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.timezone import is_naive, make_aware
 
 from .distribution_import import apply_extracted_to_song, scrape_streaming_from_url
 from .models import (
@@ -27,11 +31,18 @@ _LONG_LINK_FIELDS = (
 
 
 class SongAdminForm(forms.ModelForm):
+    release_local_datetime = forms.DateTimeField(
+        required=False,
+        help_text="Optional. Interpreted in your account timezone; sets the UTC release instant "
+        "and schedules the fan notification task.",
+    )
+
     class Meta:
         model = Song
-        fields = "__all__"
+        exclude = ("release_at",)
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
+        self._user = user
         super().__init__(*args, **kwargs)
         wide = forms.TextInput(
             attrs={
@@ -44,6 +55,41 @@ class SongAdminForm(forms.ModelForm):
             if name in self.fields:
                 self.fields[name].widget = wide
 
+        u = getattr(self, "_user", None)
+        if self.instance.pk and self.instance.release_at and u and getattr(u, "is_authenticated", False):
+            tzname = getattr(u, "timezone", None) or "UTC"
+            try:
+                tz = ZoneInfo(tzname)
+            except Exception:
+                tz = ZoneInfo("UTC")
+            self.fields["release_local_datetime"].initial = self.instance.release_at.astimezone(tz).replace(
+                tzinfo=None
+            )
+
+    def clean(self):
+        cleaned = super().clean()
+        u = getattr(self, "_user", None)
+        if "release_local_datetime" in self.changed_data:
+            loc = cleaned.get("release_local_datetime")
+            if loc is None:
+                self.instance.release_at = None
+                self.instance.release_timezone = "UTC"
+            else:
+                tzname = "UTC"
+                if u and getattr(u, "is_authenticated", False):
+                    tzname = getattr(u, "timezone", None) or "UTC"
+                try:
+                    z = ZoneInfo(tzname)
+                except Exception:
+                    z = ZoneInfo("UTC")
+                    tzname = "UTC"
+                if is_naive(loc):
+                    self.instance.release_at = make_aware(loc, z)
+                else:
+                    self.instance.release_at = loc.astimezone(dt_timezone.utc)
+                self.instance.release_timezone = tzname
+        return cleaned
+
 
 @admin.register(Song)
 class SongAdmin(admin.ModelAdmin):
@@ -51,6 +97,7 @@ class SongAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "slug",
+        "release_at",
         "accent_color",
         "is_published",
         "link_count",
@@ -63,7 +110,13 @@ class SongAdmin(admin.ModelAdmin):
     list_filter = ("is_published",)
     search_fields = ("title", "slug")
     prepopulated_fields = {"slug": ("title",)}
-    readonly_fields = ("created_at", "updated_at", "preview_link_display")
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+        "preview_link_display",
+        "release_at_display",
+        "release_notification_task_id",
+    )
     fieldsets = (
         (None, {"fields": ("title", "slug", "cover_art", "accent_color", "is_published")}),
         (
@@ -84,8 +137,35 @@ class SongAdmin(admin.ModelAdmin):
             "amazon_music_url",
             "deezer_url",
         )}),
+        (
+            "Release & fan notification",
+            {
+                "fields": (
+                    "release_local_datetime",
+                    "release_at_display",
+                    "release_timezone",
+                    "release_notification_task_id",
+                ),
+            },
+        ),
         ("Meta", {"fields": ("preview_link_display", "created_at", "updated_at")}),
     )
+
+    def get_form(self, request, obj=None, **kwargs):
+        user = request.user
+
+        class BoundSongAdminForm(SongAdminForm):
+            def __init__(self, *args, **kw):
+                super().__init__(*args, user=user, **kw)
+
+        kwargs["form"] = BoundSongAdminForm
+        return super().get_form(request, obj, **kwargs)
+
+    @admin.display(description="Release (UTC)")
+    def release_at_display(self, obj: Song):
+        if not obj or not obj.pk or not obj.release_at:
+            return "—"
+        return obj.release_at.isoformat()
 
     @admin.display(description="Platforms")
     def link_count(self, obj: Song):

@@ -18,45 +18,58 @@ ALLOWED_HOSTS = [
     if h.strip()
 ]
 
-_csrf = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").strip()
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf.split(",") if o.strip()]
+_csrf_raw = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").strip()
+CSRF_TRUST_ALL_ORIGINS = _csrf_raw == "*"
+if CSRF_TRUST_ALL_ORIGINS:
+    CSRF_TRUSTED_ORIGINS = []
+else:
+    CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_raw.split(",") if o.strip()]
+
+
+def _postgres_from_url(url: str) -> dict:
+    """Build Django DATABASES['default'] from a postgres / postgresql URL (e.g. Supabase)."""
+    from urllib.parse import parse_qs, unquote, urlparse
+
+    parsed = urlparse(url)
+    qs = parse_qs(parsed.query)
+    name = (parsed.path or "/postgres").lstrip("/") or "postgres"
+    cfg = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": name,
+        "USER": parsed.username or "postgres",
+        "PASSWORD": unquote(parsed.password or ""),
+        "HOST": parsed.hostname or "localhost",
+        "PORT": str(parsed.port or 5432),
+    }
+    sslmode = (qs.get("sslmode") or [None])[0]
+    if sslmode:
+        cfg["OPTIONS"] = {"sslmode": sslmode}
+    return cfg
 
 
 def database_from_env():
     """
-    Postgres when DATABASE_URL is set (Docker, Oracle VM, etc.).
-    SQLite is only the default when DATABASE_URL is unset — convenient for local
-    runserver; do not use SQLite for multi-worker or production deploys.
+    Local (``DJANGO_DEBUG=1``): always SQLite at ``BASE_DIR / db.sqlite3`` — ``DATABASE_URL`` is ignored.
+
+    Production (``DJANGO_DEBUG=0``): requires a Postgres ``DATABASE_URL`` (e.g. Supabase).
     """
-    url = os.environ.get("DATABASE_URL", "").strip()
-    if not url or url.startswith("sqlite"):
-        if url.startswith("sqlite"):
-            raw = url.split("sqlite:///", 1)[-1].split("sqlite://", 1)[-1]
-            name = raw or str(BASE_DIR / "db.sqlite3")
-            if not os.path.isabs(name):
-                name = str(BASE_DIR / name)
-        else:
-            name = str(BASE_DIR / "db.sqlite3")
+    from django.core.exceptions import ImproperlyConfigured
+
+    if DEBUG:
         return {
             "default": {
                 "ENGINE": "django.db.backends.sqlite3",
-                "NAME": name,
+                "NAME": str(BASE_DIR / "db.sqlite3"),
             }
         }
-    # postgres://user:password@host:port/dbname
-    from urllib.parse import urlparse
 
-    parsed = urlparse(url)
-    return {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": parsed.path.lstrip("/") or "music",
-            "USER": parsed.username or "music",
-            "PASSWORD": parsed.password or "",
-            "HOST": parsed.hostname or "localhost",
-            "PORT": str(parsed.port or 5432),
-        }
-    }
+    url = os.environ.get("DATABASE_URL", "").strip()
+    if not url or url.startswith("sqlite"):
+        raise ImproperlyConfigured(
+            "Production (DJANGO_DEBUG=0) requires a Postgres DATABASE_URL such as your Supabase "
+            "connection string. Local development uses SQLite automatically when DJANGO_DEBUG=1."
+        )
+    return {"default": _postgres_from_url(url)}
 
 
 DATABASES = database_from_env()
@@ -72,6 +85,14 @@ INSTALLED_APPS = [
     "smartlinks",
 ]
 
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
 AUTH_USER_MODEL = "users.User"
 
 MIDDLEWARE = [
@@ -79,7 +100,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "config.csrf_middleware.RelaxedCsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -113,6 +134,8 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
+
+CELERY_TIMEZONE = TIME_ZONE
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

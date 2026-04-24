@@ -1,10 +1,10 @@
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count
-from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_GET, require_http_methods
 
 from .forms import FanOptInForm
 from .models import (
@@ -14,6 +14,7 @@ from .models import (
     MusicPlatform,
     OutboundLinkClick,
     Song,
+    SupabaseWatchdog,
 )
 from .session_utils import clear_fan_unlock_for_song, fan_id_for_song, set_fan_unlock_for_song
 
@@ -170,6 +171,21 @@ def dashboard(request):
         "smartlinks/dashboard.html",
         {"songs": qs},
     )
+
+
+@require_GET
+def pet_supabase(request):
+    """
+    Toggles ``SupabaseWatchdog`` row pk=1 (boolean + ``updated_at``). Intended for UptimeRobot:
+    responds with plain ``ok`` and 200 on success, 500 on failure.
+    """
+    try:
+        row, _ = SupabaseWatchdog.objects.get_or_create(pk=1, defaults={"flag": False})
+        row.flag = not row.flag
+        row.save()
+    except Exception:
+        return HttpResponseServerError("error", content_type="text/plain")
+    return HttpResponse("ok", content_type="text/plain")
 
 
 def home(request):

@@ -53,6 +53,24 @@ class Song(models.Model):
     )
 
     is_published = models.BooleanField(default=True)
+
+    release_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="UTC instant when the track is “out”; used to schedule fan notification.",
+    )
+    release_timezone = models.CharField(
+        max_length=64,
+        default="UTC",
+        help_text="IANA zone for how the release time was chosen (for future email copy).",
+    )
+    release_notification_task_id = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Celery task id for the scheduled fan notification (internal).",
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -172,3 +190,20 @@ class FanGateSubmission(models.Model):
     class Meta:
         db_table = "analytics_fan_gate_submissions"
         indexes = [models.Index(fields=["song", "created_at"])]
+
+
+class SupabaseWatchdog(models.Model):
+    """
+    Singleton-style row (``pk=1``) toggled by ``GET /pet-supabase/`` so an external pinger
+    can keep the Supabase project from idling.
+    """
+
+    flag = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "supabase_watchdog"
+        verbose_name = "Supabase watchdog"
+
+    def __str__(self):
+        return f"SupabaseWatchdog(flag={self.flag})"
