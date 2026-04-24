@@ -87,14 +87,6 @@ INSTALLED_APPS = [
     "smartlinks",
 ]
 
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://127.0.0.1:6379/0")
-CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
-CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-
 AUTH_USER_MODEL = "users.User"
 
 MIDDLEWARE = [
@@ -137,8 +129,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-CELERY_TIMEZONE = TIME_ZONE
-
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
@@ -179,17 +169,28 @@ if USE_S3_MEDIA:
     STORAGES["default"] = {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"}
     _bucket = AWS_STORAGE_BUCKET_NAME
     _public_base = os.environ.get("AWS_S3_PUBLIC_MEDIA_BASE_URL", "").strip().rstrip("/")
+    _supabase_ref = ""
     if _public_base:
         MEDIA_URL = f"{_public_base}/"
     else:
         _host = AWS_S3_ENDPOINT_URL.split("//", 1)[-1].split("/", 1)[0]
-        _ref = _host.split(".")[0] if ".storage.supabase.co" in _host else ""
-        if _ref:
+        _supabase_ref = _host.split(".")[0] if ".storage.supabase.co" in _host else ""
+        if _supabase_ref:
             MEDIA_URL = (
-                f"https://{_ref}.supabase.co/storage/v1/object/public/{_bucket}/"
+                f"https://{_supabase_ref}.supabase.co/storage/v1/object/public/{_bucket}/"
             )
         else:
             MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{_bucket}/"
+    # ``ImageField.url`` uses storage.url(), not Django's MEDIA_URL. Without this,
+    # browsers hit the S3 API host (.../storage/v1/s3/...) and get 403 on GET.
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN", "").strip()
+    if not AWS_S3_CUSTOM_DOMAIN:
+        if _supabase_ref:
+            AWS_S3_CUSTOM_DOMAIN = (
+                f"{_supabase_ref}.supabase.co/storage/v1/object/public/{_bucket}"
+            )
+        elif _public_base:
+            AWS_S3_CUSTOM_DOMAIN = _public_base.split("//", 1)[-1].rstrip("/")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

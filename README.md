@@ -50,7 +50,7 @@ Run the `web` container (or Gunicorn) behind Nginx, proxy to port 8000, set `DJA
 
 ## Environment (secrets, not in git)
 
-Keep a private **`.prod.env`** (see `.gitignore`; do not commit filled secrets). For Docker Compose, copy it to **`.env`** in the repo root so Compose can substitute variables. Set at least **`DJANGO_SECRET_KEY`**, **`DATABASE_URL`** (Supabase), **`DJANGO_ALLOWED_HOSTS`**, **`DJANGO_CSRF_TRUSTED_ORIGINS`**, and **`CELERY_*`** (Redis) for production.
+Keep a private **`.prod.env`** (see `.gitignore`; do not commit filled secrets). For Docker Compose, copy it to **`.env`** in the repo root so Compose can substitute variables. Set at least **`DJANGO_SECRET_KEY`**, **`DATABASE_URL`** (Supabase), **`DJANGO_ALLOWED_HOSTS`**, and **`DJANGO_CSRF_TRUSTED_ORIGINS`** for production.
 
 ## Backups (do not rely on the VM disk alone)
 

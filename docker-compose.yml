@@ -1,11 +1,6 @@
 # Copy `.prod.env` to `.env` or set vars in the shell. Compose reads `.env` for ${VAR} substitution.
 
 services:
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
   web:
     build: .
     command: scripts/start_production.sh
@@ -15,15 +10,11 @@ services:
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-change-me}
       DJANGO_CSRF_TRUSTED_ORIGINS: ${DJANGO_CSRF_TRUSTED_ORIGINS:-}
       DATABASE_URL: ${DATABASE_URL:-}
-      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
-      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/0}
       SERVE_UPLOADS: ${SERVE_UPLOADS:-1}
     volumes:
       - media:/app/media
     ports:
       - "8000:8000"
-    depends_on:
-      - redis
 
 volumes:
   media:

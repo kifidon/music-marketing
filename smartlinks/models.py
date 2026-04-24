@@ -84,17 +84,12 @@ class Song(models.Model):
         null=True,
         blank=True,
         db_index=True,
-        help_text="UTC instant when the track is “out”; used to schedule fan notification.",
+        help_text="UTC instant when the track is “out” (for display / future use).",
     )
     release_timezone = models.CharField(
         max_length=64,
         default="UTC",
         help_text="IANA zone for how the release time was chosen (for future email copy).",
-    )
-    release_notification_task_id = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="Celery task id for the scheduled fan notification (internal).",
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

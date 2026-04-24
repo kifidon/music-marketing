@@ -117,7 +117,6 @@ class SongAdmin(admin.ModelAdmin):
         "updated_at",
         "preview_link_display",
         "release_at_display",
-        "release_notification_task_id",
     )
     fieldsets = (
         (
@@ -159,7 +158,6 @@ class SongAdmin(admin.ModelAdmin):
                     "release_local_datetime",
                     "release_at_display",
                     "release_timezone",
-                    "release_notification_task_id",
                 ),
             },
         ),
@@ -211,7 +209,8 @@ class SongAdmin(admin.ModelAdmin):
         return format_html('<a href="{}" target="_blank">{}</a>', url, url)
 
     def save_model(self, request, obj, form, change):
-        if not change and not obj.owner_id and request.user.is_authenticated:
+        # Default owner so cover_art upload_to uses a real user id (not only on "add").
+        if not obj.owner_id and request.user.is_authenticated:
             obj.owner = request.user
         import_url = (obj.import_from_smart_link or "").strip()
         if import_url:
