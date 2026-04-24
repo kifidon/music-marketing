@@ -6,22 +6,24 @@
   <title>Cool vinyl — embed</title>
   <style>
     :root {
-      --bg: #0c0d10;
+      --bg: #ffffff;
+      /* Mat color: overridden on .vinyl-wrap via inline style from song / template */
+      --vinyl-base: #b8b9c0;
+      /* Negative inset = mat extends past the disc square (larger base) */
+      --vinyl-base-inset: -12%;
       --spot: rgba(255, 248, 235, 0.06);
-      --vinyl: #121318;
-      --groove: rgba(255, 255, 255, 0.04);
-      --label: linear-gradient(145deg, #2a1f35 0%, #1a1422 40%, #3d2848 100%);
-      --rim: #1e1f26;
-      --shine: linear-gradient(
-        125deg,
-        transparent 0%,
-        transparent 40%,
-        rgba(255, 255, 255, 0.12) 48%,
-        rgba(255, 255, 255, 0.22) 50%,
-        rgba(255, 255, 255, 0.08) 52%,
-        transparent 60%,
-        transparent 100%
-      );
+      --vinyl-deep: #0a0b0f;
+      --vinyl-mid: #12141c;
+      --groove-hi: #1c1e28;
+      --groove-lo: #0e0f14;
+      /* Label hues (radial uses stops; smoother than a hard clip) */
+      --label-in: #1f1828;
+      --label-mid: #2a1f38;
+      --label-out: #3d2848;
+      --label-edge: rgba(26, 20, 34, 0.55);
+      --rim: #181920;
+      /* Orbit for label copy: % of disc box; both use same radius from center */
+      --label-orbit-r: 15%;
     }
 
     * { box-sizing: border-box; }
@@ -38,7 +40,6 @@
       font-family: ui-sans-serif, system-ui, sans-serif;
     }
 
-    /* Optional: vignette spotlight behind the disc */
     .stage {
       position: relative;
       width: min(100vw - 48px, 380px);
@@ -67,60 +68,135 @@
       z-index: 1;
       width: 88%;
       aspect-ratio: 1;
+      overflow: visible;
+    }
+
+    /* Mat must NOT sit under filter — drop-shadow clips overflow and hid negative inset. */
+    .vinyl-base {
+      position: absolute;
+      inset: var(--vinyl-base-inset);
+      z-index: 0;
+      background: var(--vinyl-base);
+      border-radius: 0.375rem; /* rounded-md */
+      pointer-events: none;
+    }
+
+    .vinyl-shadowed {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
       filter: drop-shadow(0 28px 48px rgba(0, 0, 0, 0.65))
         drop-shadow(0 0 1px rgba(255, 255, 255, 0.04));
     }
 
+    /* Spinning disc */
     .vinyl {
+      position: relative;
+      z-index: 1;
       width: 100%;
       height: 100%;
       border-radius: 50%;
-      background:
-        /* center hole */
-        radial-gradient(circle at 50% 50%, var(--bg) 0%, var(--bg) 3.2%, transparent 3.25%),
-        /* label */
-        radial-gradient(circle at 50% 50%, transparent 28%, transparent 28.5%, var(--label) 28.5%, var(--label) 42%, transparent 42.2%),
-        /* grooves */
-        repeating-radial-gradient(
-          circle at 50% 50%,
-          transparent 0,
-          transparent 2px,
-          var(--groove) 2px,
-          var(--groove) 3px
-        ),
-        radial-gradient(circle at 50% 50%, #1a1b22 0%, var(--vinyl) 45%, var(--rim) 100%);
+      overflow: hidden;
+      /* Base platter — softer steps through the middle */
+      background: radial-gradient(
+        circle at 50% 50%,
+        #16171f 0%,
+        var(--vinyl-mid) 14%,
+        var(--vinyl-deep) 32%,
+        #101119 52%,
+        var(--rim) 78%,
+        #14151c 100%
+      );
       animation: spin 48s linear infinite;
     }
 
-    .vinyl::after {
-      content: "";
+    /* Visible concentric grooves (outer ring only, not under label) */
+    .vinyl-grooves {
       position: absolute;
       inset: 0;
       border-radius: 50%;
-      background: var(--shine);
+      z-index: 1;
       pointer-events: none;
-      mix-blend-mode: screen;
-      opacity: 0.85;
-      animation: shine-drift 14s ease-in-out infinite alternate;
+      background: repeating-radial-gradient(
+        circle at 50% 50%,
+        var(--groove-lo) 0,
+        var(--groove-lo) 2px,
+        var(--groove-hi) 2px,
+        var(--groove-hi) 3px,
+        var(--groove-lo) 3px,
+        var(--groove-lo) 5px,
+        var(--groove-hi) 5px,
+        var(--groove-hi) 6px,
+        var(--groove-lo) 6px,
+        var(--groove-lo) 8px
+      );
+      /* Soft inner edge so grooves don’t “cut” against the label */
+      -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent 0%,
+        transparent 36%,
+        rgba(0, 0, 0, 0.22) 39%,
+        rgba(0, 0, 0, 0.72) 41.5%,
+        #000 44%,
+        #000 99.2%,
+        transparent 100%
+      );
+      mask: radial-gradient(
+        farthest-side,
+        transparent 0%,
+        transparent 36%,
+        rgba(0, 0, 0, 0.22) 39%,
+        rgba(0, 0, 0, 0.72) 41.5%,
+        #000 44%,
+        #000 99.2%,
+        transparent 100%
+      );
+    }
+
+    /* Center label + spindle hole — feathered inner & outer rings */
+    .vinyl-label {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(
+          circle at 50% 50%,
+          var(--vinyl-base) 0%,
+          var(--vinyl-base) 2.8%,
+          rgba(12, 13, 16, 0.55) 3.05%,
+          transparent 3.85%
+        ),
+        radial-gradient(
+          circle at 50% 50%,
+          transparent 0%,
+          transparent 22%,
+          rgba(61, 40, 72, 0.18) 24%,
+          rgba(42, 31, 56, 0.55) 26.5%,
+          var(--label-in) 29%,
+          var(--label-mid) 33%,
+          var(--label-out) 37%,
+          rgba(61, 40, 72, 0.92) 39%,
+          var(--label-mid) 40.5%,
+          var(--label-edge) 42.5%,
+          rgba(26, 20, 34, 0.28) 44.5%,
+          rgba(16, 15, 22, 0.08) 46.5%,
+          transparent 48.5%
+        );
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    @keyframes shine-drift {
-      from { transform: rotate(-6deg) scale(1); opacity: 0.75; }
-      to { transform: rotate(8deg) scale(1.02); opacity: 0.95; }
-    }
-
-    /* Tonearm silhouette (static) */
     .arm {
       position: absolute;
       top: -2%;
       right: 4%;
       width: 42%;
       height: 22%;
-      z-index: 2;
+      z-index: 5;
       pointer-events: none;
       transform-origin: 100% 100%;
       transform: rotate(-18deg);
@@ -165,9 +241,9 @@
     .label-text {
       position: absolute;
       left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%) rotate(0deg);
-      width: 22%;
+      top: calc(50% - var(--label-orbit-r));
+      transform: translate(-50%, -50%);
+      width: 28%;
       text-align: center;
       font-size: clamp(8px, 2.2vw, 11px);
       font-weight: 700;
@@ -176,30 +252,62 @@
       color: rgba(255, 245, 255, 0.55);
       line-height: 1.35;
       pointer-events: none;
-      z-index: 1;
-      animation: spin 48s linear infinite reverse;
+      z-index: 3;
+    }
+
+    .song-title-on-disc {
+      position: absolute;
+      left: 50%;
+      top: calc(50% + var(--label-orbit-r));
+      transform: translate(-50%, -50%);
+      width: min(38%, 9.5em);
+      margin: 0;
+      text-align: center;
+      font-size: clamp(7px, 1.85vw, 10px);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: none;
+      color: rgba(255, 245, 255, 0.5);
+      line-height: 1.25;
+      pointer-events: none;
+      z-index: 3;
+      overflow-wrap: anywhere;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .vinyl,
-      .vinyl::after,
-      .label-text {
+      .vinyl {
         animation: none;
       }
     }
   </style>
 </head>
 <body>
-  <div class="stage" role="img" aria-label="Decorative spinning vinyl record">
-    <div class="vinyl-wrap">
-      <div class="arm" aria-hidden="true">
-        <div class="arm-pivot"></div>
-        <div class="arm-bar">
-          <div class="arm-head"></div>
+  <!--
+    Django: pass `song` (Song model) for title + mat color from song.accent_color.
+      {% include "embeds/cool-vinyl.html" with song=song song_name=song.title only %}
+    Optional override: `vinyl_base_color` (hex) wins over song.accent_color.
+    song_name falls back to "song name". Mat uses rounded-md, configurable --vinyl-base.
+  -->
+  <div class="stage" role="group" aria-labelledby="vinyl-song-title">
+    <div
+      class="vinyl-wrap"
+      style="--vinyl-base: {% if vinyl_base_color %}{{ vinyl_base_color }}{% elif song %}{{ song.accent_color }}{% else %}#b8b9c0{% endif %};"
+    >
+      <div class="vinyl-base" aria-hidden="true"></div>
+      <div class="vinyl-shadowed">
+        <div class="arm" aria-hidden="true">
+          <div class="arm-pivot"></div>
+          <div class="arm-bar">
+            <div class="arm-head"></div>
+          </div>
+        </div>
+        <div class="vinyl">
+          <div class="vinyl-grooves" aria-hidden="true"></div>
+          <div class="vinyl-label" aria-hidden="true"></div>
+          <div class="label-text" aria-hidden="true">Side<br>A</div>
+          <p id="vinyl-song-title" class="song-title-on-disc">{% firstof song_name song.title "song name" %}</p>
         </div>
       </div>
-      <div class="vinyl"></div>
-      <div class="label-text" aria-hidden="true">Side<br>A</div>
     </div>
   </div>
 </body>
