@@ -32,6 +32,34 @@ _LANDING_LOGO_BY_PLATFORM = {
 }
 
 
+def _artist_display(song: Song) -> str:
+    """Public name for minimal landing: owner.artist_name, else full name, else username."""
+    o = song.owner
+    if o is None:
+        return ""
+    if (getattr(o, "artist_name", "") or "").strip():
+        return o.artist_name.strip()
+    full = (o.get_full_name() or "").strip()
+    return full or o.get_username()
+
+
+def _owner_social_links(song: Song) -> list[dict]:
+    """Instagram / TikTok / YouTube when the song owner saved full URLs on their profile."""
+    o = song.owner
+    if o is None:
+        return []
+    out: list[dict] = []
+    pairs = (
+        ("instagram", "Instagram", (o.instagram or "").strip()),
+        ("tiktok", "TikTok", (o.tiktok or "").strip()),
+        ("youtube", "YouTube", (o.youtube or "").strip()),
+    )
+    for key, label, url in pairs:
+        if url:
+            out.append({"key": key, "label": label, "url": url})
+    return out
+
+
 def _platform_rows(song: Song) -> list[dict]:
     return [
         {
@@ -64,7 +92,11 @@ def _wants_json(request) -> bool:
 @ensure_csrf_cookie
 @require_http_methods(["GET", "HEAD"])
 def landing(request, slug: str):
-    song = get_object_or_404(Song, slug=slug, is_published=True)
+    song = get_object_or_404(
+        Song.objects.select_related("owner"),
+        slug=slug,
+        is_published=True,
+    )
     reset_q = (request.GET.get("reset_gate") or "").strip()
     if reset_q:
         allow = False
@@ -83,6 +115,7 @@ def landing(request, slug: str):
     )
     recent_releases = list(
         Song.objects.filter(is_published=True)
+        .select_related("owner")
         .exclude(pk=song.pk)
         .order_by("-created_at")[:2]
     )
@@ -91,6 +124,8 @@ def landing(request, slug: str):
         template_name,
         {
             "song": song,
+            "artist_display": _artist_display(song),
+            "owner_social_links": _owner_social_links(song),
             "platform_rows": _platform_rows(song),
             "gate_unlocked": bool(fan_id_for_song(request, song.id)),
             "recent_releases": recent_releases,

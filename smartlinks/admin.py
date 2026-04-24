@@ -33,8 +33,7 @@ _LONG_LINK_FIELDS = (
 class SongAdminForm(forms.ModelForm):
     release_local_datetime = forms.DateTimeField(
         required=False,
-        help_text="Optional. Interpreted in your account timezone; sets the UTC release instant "
-        "and schedules the fan notification task.",
+        help_text="Optional. Interpreted in your account timezone; sets the UTC release instant.",
     )
 
     class Meta:
@@ -124,6 +123,7 @@ class SongAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "title",
+                    "description",
                     "slug",
                     "owner",
                     "cover_art",

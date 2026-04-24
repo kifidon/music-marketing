@@ -26,6 +26,10 @@ class Song(models.Model):
     """One smart-link landing page per song."""
 
     title = models.CharField(max_length=255)
+    description = models.TextField(
+        blank=True,
+        help_text="Optional. Shown on the minimal landing template under the artist line.",
+    )
     slug = models.SlugField(max_length=255, unique=True, db_index=True)
     cover_art = models.ImageField(
         upload_to=song_cover_upload_to,
