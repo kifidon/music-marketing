@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forever save — {{ song.title }}</title>
+  <style>
+    :root {
+      --accent: {{ song.accent_color|default:"#6366f1" }};
+      --accent-soft: color-mix(in srgb, var(--accent) 35%, transparent);
+      --bg: #07080b;
+      --card: #10131a;
+      --text: #f4f5f7;
+      --muted: #a7adb8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 500px at 50% -20%, var(--accent-soft), transparent 55%),
+        var(--bg);
+    }
+    .wrap {
+      max-width: 440px;
+      margin: 0 auto;
+      padding: 40px 20px 48px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, #1b1f2a);
+      border-radius: 20px;
+      padding: 24px 20px 22px;
+    }
+    h1 {
+      font-size: 1.35rem;
+      margin: 0 0 8px;
+    }
+    p.lead {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid #2a3142;
+      background: #0c0e14;
+      color: var(--text);
+      font: inherit;
+    }
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .gate-actions .btn-secondary {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font: inherit;
+      font-weight: 600;
+      text-decoration: none;
+      text-align: center;
+      border: 1px solid #2a3142;
+      background: #151922;
+      color: var(--text);
+    }
+    .gate-actions .btn-secondary:hover {
+      border-color: #3d4555;
+    }
+    .gate-actions button[type="submit"] {
+      flex: 1;
+      margin: 0;
+      padding: 12px 14px;
+      border: none;
+      border-radius: 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: #0b1220;
+    }
+    .errors {
+      color: #f9b4b4;
+      font-size: 14px;
+      margin: 0 0 10px;
+    }
+    .gate-cancel-row {
+      margin-top: 12px;
+      text-align: center;
+    }
+    .gate-cancel-row a {
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .gate-cancel-row a:hover {
+      color: var(--text);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Forever save</h1>
+      <p class="lead">
+        Join the list and continue to <strong>{{ dest_label }}</strong> for this release.
+      </p>
+      {% if form.non_field_errors %}
+        <div class="errors">{{ form.non_field_errors }}</div>
+      {% endif %}
+      <form method="post" action="{% url 'smartlinks:go_platform' slug=song.slug platform=platform %}">
+        {% csrf_token %}
+        <label for="id_email">Email</label>
+        {{ form.email }}
+        {% if form.email.errors %}<div class="errors">{{ form.email.errors }}</div>{% endif %}
+        <label for="id_name">Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}<div class="errors">{{ form.name.errors }}</div>{% endif %}
+        <div class="gate-actions">
+          <a class="btn-secondary" href="{{ outbound_url }}">Maybe later</a>
+          <button type="submit">Save &amp; continue</button>
+        </div>
+      </form>
+      <p class="gate-cancel-row">
+        <a href="{{ song.get_absolute_url }}">Cancel</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

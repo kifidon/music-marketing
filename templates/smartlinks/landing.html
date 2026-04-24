@@ -1,0 +1,427 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ song.title }}</title>
+  <style>
+    :root {
+      --accent: {{ song.accent_color|default:"#6366f1" }};
+      --card: rgba(16, 19, 26, 0.82);
+      --text: #f4f5f7;
+      --muted: #c4c9d4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+      color: var(--text);
+      background: #08080a;
+    }
+    body.has-cover-bg {
+      background: #000;
+    }
+    /* Huge blurred cover as the page background */
+    .cover-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .cover-bg img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 160vmax;
+      height: 160vmax;
+      min-width: 100%;
+      min-height: 100%;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      filter: blur(72px) saturate(1.12) brightness(0.5);
+    }
+    .cover-bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.42);
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 48px 20px 64px;
+    }
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, rgba(255,255,255,0.12));
+      border-radius: 24px;
+      padding: 28px 22px 26px;
+      box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255,255,255,0.04) inset;
+    }
+    .art {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 16px;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 20px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    }
+    h1 {
+      font-size: 1.55rem;
+      line-height: 1.2;
+      margin: 0 0 6px;
+      text-align: center;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0 0 22px;
+    }
+    .platforms {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .platforms a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-weight: 600;
+      color: var(--text);
+      border: 1px solid color-mix(in srgb, var(--accent) 35%, #2a3142);
+      background: color-mix(in srgb, var(--accent) 14%, #0c0e14);
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+    .platforms a:hover {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--accent) 55%, #2a3142);
+      background: color-mix(in srgb, var(--accent) 22%, #0c0e14);
+    }
+    .platforms .platform-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 44px;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.06) inset;
+    }
+    .platforms .platform-logo {
+      display: block;
+      max-height: 34px;
+      max-width: min(100%, 220px);
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .platforms .platform-label-fallback {
+      font-size: 0.95rem;
+      color: #111;
+    }
+    .foot {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      opacity: 0.85;
+    }
+
+    dialog.gate-dialog {
+      z-index: 100;
+      width: min(420px, calc(100vw - 32px));
+      max-height: calc(100vh - 32px);
+      margin: auto;
+      padding: 0;
+      border: none;
+      border-radius: 20px;
+      background: rgba(16, 19, 26, 0.94);
+      color: var(--text);
+      box-shadow: 0 24px 80px rgba(0,0,0,0.55);
+    }
+    dialog.gate-dialog::backdrop {
+      background: rgba(0,0,0,0.65);
+    }
+    .gate-inner {
+      padding: 22px 20px 20px;
+    }
+    .gate-inner h2 {
+      margin: 0 0 8px;
+      font-size: 1.25rem;
+    }
+    .gate-inner .lead {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+    .gate-inner label {
+      display: block;
+      margin: 12px 0 6px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .gate-inner input {
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid #2a3142;
+      background: #0c0e14;
+      color: var(--text);
+      font: inherit;
+    }
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+    }
+    .gate-actions button {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid #2a3142;
+      background: #151922;
+      color: var(--text);
+    }
+    .gate-actions button.primary {
+      border: none;
+      background: var(--accent);
+      color: #0b1220;
+    }
+    .gate-actions button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .gate-cancel-row {
+      margin-top: 12px;
+      text-align: center;
+    }
+    .gate-cancel-row button {
+      width: 100%;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 10px;
+      font: inherit;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--muted);
+      background: transparent;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .gate-cancel-row button:hover {
+      color: var(--text);
+    }
+    .gate-err {
+      color: #f9b4b4;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body class="{% if song.cover_art %}has-cover-bg{% endif %}">
+  {% if song.cover_art %}
+  <div class="cover-bg" aria-hidden="true">
+    <img src="{{ song.cover_art.url }}" alt="" decoding="async" fetchpriority="high">
+  </div>
+  {% endif %}
+  <div class="wrap">
+    <div class="card">
+      {% if song.cover_art %}
+        <img class="art" src="{{ song.cover_art.url }}" alt="">
+      {% endif %}
+      <h1>{{ song.title }}</h1>
+      <p class="sub">Choose where to listen.</p>
+      <div class="platforms">
+        {% for row in platform_rows %}
+          {% if gate_unlocked %}
+            <a href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}" aria-label="{{ row.platform.label }}">
+              <span class="platform-inner">
+                {% if row.logo %}
+                  <img class="platform-logo" src="{% static row.logo %}" alt="{{ row.platform.label }}" width="220" height="40" decoding="async">
+                {% else %}
+                  <span class="platform-label-fallback">{{ row.platform.label }}</span>
+                {% endif %}
+              </span>
+            </a>
+          {% else %}
+            <a href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}" class="gate-link" aria-label="{{ row.platform.label }}" data-dest-label="{{ row.platform.label }}" data-outbound-url="{{ row.url }}">
+              <span class="platform-inner">
+                {% if row.logo %}
+                  <img class="platform-logo" src="{% static row.logo %}" alt="" width="220" height="40" decoding="async" aria-hidden="true">
+                {% else %}
+                  <span class="platform-label-fallback">{{ row.platform.label }}</span>
+                {% endif %}
+              </span>
+            </a>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    <p class="foot">Template preview — styling will be refined together.</p>
+  </div>
+
+  {% if not gate_unlocked %}
+  <dialog id="gate-modal" class="gate-dialog" aria-labelledby="gate-title">
+    <div class="gate-inner">
+      <h2 id="gate-title">Forever save</h2>
+      <p class="lead" id="gate-lead"></p>
+      <form id="gate-form" method="post">
+        {% csrf_token %}
+        <label for="gate-email">Email</label>
+        <input id="gate-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <label for="gate-name">Name</label>
+        <input id="gate-name" name="name" type="text" autocomplete="name" required placeholder="Your name">
+        <div class="gate-actions">
+          <button type="button" id="gate-maybe-later">Maybe later</button>
+          <button type="submit" class="primary" id="gate-submit">Save &amp; continue</button>
+        </div>
+        <div class="gate-cancel-row">
+          <button type="button" id="gate-cancel">Cancel</button>
+        </div>
+        <div class="gate-err" id="gate-errors" hidden></div>
+      </form>
+    </div>
+  </dialog>
+  <script>
+(function () {
+  const modal = document.getElementById("gate-modal");
+  const form = document.getElementById("gate-form");
+  const lead = document.getElementById("gate-lead");
+  const errBox = document.getElementById("gate-errors");
+  const cancel = document.getElementById("gate-cancel");
+  let postUrl = "";
+  let outboundUrl = "";
+
+  function showErr(msg) {
+    errBox.textContent = msg;
+    errBox.hidden = !msg;
+  }
+
+  function readCookie(name) {
+    var parts = ("; " + document.cookie).split("; " + name + "=");
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
+  }
+
+  function openModal(url, destLabel, directUrl) {
+    postUrl = url;
+    outboundUrl = directUrl || "";
+    lead.innerHTML = "Join the list and continue to <strong>" + destLabel + "</strong> for this release.";
+    var ml = document.getElementById("gate-maybe-later");
+    if (ml) {
+      ml.textContent = outboundUrl ? ("Maybe later — skip to " + destLabel) : "Maybe later";
+      ml.disabled = !outboundUrl;
+    }
+    showErr("");
+    var email = document.getElementById("gate-email");
+    var name = document.getElementById("gate-name");
+    var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
+    var csrfVal = csrfIn ? csrfIn.value : "";
+    email.value = "";
+    name.value = "";
+    if (csrfIn) {
+      var fromCookie = readCookie("csrftoken");
+      if (fromCookie) csrfIn.value = fromCookie;
+      else if (csrfVal) csrfIn.value = csrfVal;
+    }
+    try {
+      if (modal && typeof modal.showModal === "function") {
+        modal.showModal();
+        email.focus();
+      } else {
+        window.location.href = url;
+      }
+    } catch (err) {
+      window.location.href = url;
+    }
+  }
+
+  document.querySelectorAll("a.gate-link").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault();
+      openModal(
+        a.getAttribute("href"),
+        a.dataset.destLabel || a.getAttribute("aria-label") || "",
+        a.dataset.outboundUrl || ""
+      );
+    });
+  });
+
+  document.getElementById("gate-maybe-later").addEventListener("click", function () {
+    if (outboundUrl) {
+      if (modal && typeof modal.close === "function") modal.close();
+      window.location.href = outboundUrl;
+    }
+  });
+
+  cancel.addEventListener("click", function () {
+    if (modal && typeof modal.close === "function") modal.close();
+  });
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    showErr("");
+    var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
+    var fromCookie = readCookie("csrftoken");
+    if (csrfIn && fromCookie) csrfIn.value = fromCookie;
+    var fd = new FormData(form);
+    var submitBtn = document.getElementById("gate-submit");
+    submitBtn.disabled = true;
+    try {
+      var r = await fetch(postUrl, {
+        method: "POST",
+        body: fd,
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "X-CSRFToken": fromCookie || (csrfIn ? csrfIn.value : "")
+        },
+        credentials: "same-origin",
+      });
+      var data = await r.json().catch(function () { return {}; });
+      if (r.ok && data.redirect) {
+        window.location.href = data.redirect;
+        return;
+      }
+      var parts = [];
+      if (data.errors) {
+        Object.keys(data.errors).forEach(function (k) {
+          (data.errors[k] || []).forEach(function (m) { parts.push(m); });
+        });
+      }
+      if (r.status === 403) {
+        showErr("Session expired — refresh the page and try again.");
+      } else {
+        showErr(parts.length ? parts.join(" ") : "Something went wrong. Try again.");
+      }
+    } catch (ex) {
+      showErr("Network error. Try again.");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+})();
+  </script>
+  {% endif %}
+</body>
+</html>

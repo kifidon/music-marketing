@@ -1,0 +1,9 @@
+{% extends "base_app.html" %}
+{% block title %}Music links{% endblock %}
+{% block content %}
+  <div class="panel">
+    <h1 style="margin-top:0">Your smart links</h1>
+    <p class="muted">Landing pages live at public URLs. Add songs and fan data in the admin.</p>
+    <p><a class="btn btn-primary" href="{% url 'login' %}">Log in</a> <a class="btn" href="{% url 'admin:index' %}">Admin</a></p>
+  </div>
+{% endblock %}

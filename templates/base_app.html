@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Music links{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'app.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="app-body">
+  <header class="app-header">
+    <a class="brand" href="{% url 'smartlinks:home' %}">Music links</a>
+    <nav class="app-nav">
+      {% if user.is_authenticated %}
+        <a href="{% url 'smartlinks:dashboard' %}">Dashboard</a>
+        <a href="{% url 'admin:index' %}">Admin</a>
+        <form class="inline-logout" action="{% url 'logout' %}" method="post">
+          {% csrf_token %}
+          <button type="submit" class="link-button">Log out</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}">Log in</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="app-main">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
