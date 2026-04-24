@@ -18,7 +18,7 @@ COPY . .
 RUN chmod +x scripts/start_production.sh \
     && DJANGO_DEBUG=0 DJANGO_SECRET_KEY=collectstatic-placeholder \
     python manage.py collectstatic --noinput \
-    && python manage.py migrate --noinput
+    && python manage.py migrate --noinput 
 
 EXPOSE 8000
 
