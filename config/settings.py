@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -81,6 +82,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "storages",
     "users",
     "smartlinks",
 ]
@@ -151,6 +153,43 @@ STORAGES = {
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Supabase Storage (S3-compatible). Set ``AWS_STORAGE_BUCKET_NAME`` (and keys) in production.
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "").strip()
+USE_S3_MEDIA = bool(AWS_STORAGE_BUCKET_NAME)
+if USE_S3_MEDIA:
+    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "").strip()
+    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "").strip()
+    AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", "").strip().rstrip("/")
+    if not (AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_S3_ENDPOINT_URL):
+        raise ImproperlyConfigured(
+            "AWS_STORAGE_BUCKET_NAME is set but AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, "
+            "and AWS_S3_ENDPOINT_URL must also be set for Supabase S3 media."
+        )
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "us-east-1").strip() or "us-east-1"
+    AWS_S3_ADDRESSING_STYLE = os.environ.get("AWS_S3_ADDRESSING_STYLE", "path").strip() or "path"
+    AWS_S3_SIGNATURE_VERSION = os.environ.get("AWS_S3_SIGNATURE_VERSION", "s3v4").strip() or "s3v4"
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = os.environ.get("AWS_QUERYSTRING_AUTH", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    )
+    AWS_S3_FILE_OVERWRITE = False
+    STORAGES["default"] = {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"}
+    _bucket = AWS_STORAGE_BUCKET_NAME
+    _public_base = os.environ.get("AWS_S3_PUBLIC_MEDIA_BASE_URL", "").strip().rstrip("/")
+    if _public_base:
+        MEDIA_URL = f"{_public_base}/"
+    else:
+        _host = AWS_S3_ENDPOINT_URL.split("//", 1)[-1].split("/", 1)[0]
+        _ref = _host.split(".")[0] if ".storage.supabase.co" in _host else ""
+        if _ref:
+            MEDIA_URL = (
+                f"https://{_ref}.supabase.co/storage/v1/object/public/{_bucket}/"
+            )
+        else:
+            MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/{_bucket}/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

@@ -1,6 +1,9 @@
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils.text import slugify
+
+from smartlinks.upload_paths import song_cover_upload_to
 
 
 class MusicPlatform(models.TextChoices):
@@ -24,7 +27,11 @@ class Song(models.Model):
 
     title = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, db_index=True)
-    cover_art = models.ImageField(upload_to="covers/%Y/%m/")
+    cover_art = models.ImageField(
+        upload_to=song_cover_upload_to,
+        max_length=512,
+        help_text="Stored under your account in S3 when configured (see AWS_* env vars).",
+    )
     accent_color = models.CharField(
         max_length=7,
         default="#6366f1",
@@ -35,6 +42,14 @@ class Song(models.Model):
         choices=LandingTemplate.choices,
         default=LandingTemplate.MODERN,
         help_text="Choose which smart-link layout to render for this song.",
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="songs",
+        help_text="Account whose artist name and social links appear on this landing page.",
     )
 
     # TextField (not URLField): distro smart links can exceed URLField limits and the admin

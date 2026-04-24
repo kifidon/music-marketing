@@ -21,17 +21,17 @@ class User(AbstractUser):
     instagram = models.CharField(
         max_length=512,
         blank=True,
-        help_text="Instagram profile URL or handle.",
+        help_text="Full Instagram profile URL (https://…).",
     )
     tiktok = models.CharField(
         max_length=512,
         blank=True,
-        help_text="TikTok profile URL or @handle.",
+        help_text="Full TikTok profile URL (https://…).",
     )
     youtube = models.CharField(
         max_length=512,
         blank=True,
-        help_text="YouTube channel or video URL.",
+        help_text="Full YouTube channel or video URL (https://…).",
     )
 
     class Meta:

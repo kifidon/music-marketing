@@ -14,5 +14,8 @@ urlpatterns = [
     path("", include("smartlinks.urls")),
 ]
 
-if settings.DEBUG or settings.SERVE_UPLOADS:
+if settings.DEBUG or (
+    getattr(settings, "SERVE_UPLOADS", False)
+    and not getattr(settings, "USE_S3_MEDIA", False)
+):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

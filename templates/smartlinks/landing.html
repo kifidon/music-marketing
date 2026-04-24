@@ -22,12 +22,16 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html {
+      overflow-x: clip;
+    }
+
     body {
       min-height: 100vh;
       background: var(--navy);
       color: var(--text);
       font-family: 'Barlow Condensed', sans-serif;
-      overflow-x: hidden;
+      overflow-x: clip;
     }
 
     /* ── Noise grain overlay ── */
@@ -103,9 +107,10 @@
     .wrap {
       position: relative;
       z-index: 1;
-      max-width: 440px;
+      width: 100%;
+      max-width: min(440px, 100%);
       margin: 0 auto;
-      padding: 52px 20px 72px;
+      padding: clamp(36px, 9vw, 52px) clamp(14px, 4vw, 20px) clamp(48px, 11vw, 72px);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -143,8 +148,11 @@
     .art-wrap {
       position: relative;
       width: 100%;
-      max-width: 340px;
-      margin-bottom: 28px;
+      max-width: min(340px, 100%);
+      max-height: min(56svh, 360px);
+      margin-bottom: clamp(18px, 4vw, 28px);
+      overflow: hidden;
+      border-radius: 4px;
       animation: fadeUp 0.55s 0.1s ease both;
     }
     .art-wrap::before {
@@ -159,8 +167,11 @@
       position: relative;
       z-index: 1;
       width: 100%;
+      height: auto;
+      max-height: min(56svh, 360px);
       aspect-ratio: 1;
       object-fit: cover;
+      object-position: center;
       display: block;
       border-radius: 4px;
       box-shadow: 0 24px 60px rgba(0,0,0,0.6);
@@ -169,10 +180,10 @@
     .art-wrap::after {
       content: "";
       position: absolute;
-      bottom: -12px;
-      right: -12px;
-      width: 48px;
-      height: 48px;
+      bottom: -8px;
+      right: 0;
+      width: 40px;
+      height: 40px;
       background: var(--yellow);
       border-radius: 2px;
       z-index: 0;
@@ -182,8 +193,8 @@
     /* ── Title block ── */
     .title-block {
       width: 100%;
-      max-width: 340px;
-      margin-bottom: 32px;
+      max-width: min(340px, 100%);
+      margin-bottom: clamp(20px, 5vw, 32px);
       animation: fadeUp 0.55s 0.2s ease both;
     }
     .artist-name {
@@ -196,11 +207,12 @@
     }
     h1 {
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(2.8rem, 10vw, 4rem);
+      font-size: clamp(2rem, 8vw, 4rem);
       line-height: 0.95;
       letter-spacing: 0.01em;
       color: var(--text);
       margin-bottom: 10px;
+      overflow-wrap: anywhere;
     }
     h1 span {
       color: var(--yellow);
@@ -216,7 +228,7 @@
     /* ── Divider ── */
     .divider {
       width: 100%;
-      max-width: 340px;
+      max-width: min(340px, 100%);
       display: flex;
       align-items: center;
       gap: 10px;
@@ -239,7 +251,7 @@
     /* ── Platforms ── */
     .platforms {
       width: 100%;
-      max-width: 340px;
+      max-width: min(340px, 100%);
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -256,10 +268,11 @@
       background: rgba(255,255,255,0.04);
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
-      padding: 10px 16px;
+      padding: clamp(7px, 2vw, 10px) clamp(12px, 3vw, 16px);
       transition: all 0.18s ease;
       position: relative;
       overflow: hidden;
+      max-width: 100%;
     }
     .platforms a::before {
       content: "";
@@ -285,15 +298,15 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      min-height: 40px;
-      padding: 5px 10px;
+      min-height: clamp(32px, 9vw, 40px);
+      padding: 4px clamp(6px, 2vw, 10px);
       border-radius: 3px;
       background: rgba(255,255,255,0.95);
     }
     .platform-logo {
       display: block;
-      max-height: 30px;
-      max-width: min(100%, 200px);
+      max-height: clamp(22px, 6.5vw, 30px);
+      max-width: min(100%, min(200px, 82vw));
       width: auto; height: auto;
       object-fit: contain;
     }
@@ -304,6 +317,78 @@
       letter-spacing: 0.06em;
       color: #111;
       text-transform: uppercase;
+    }
+
+    /* ── Also listen to (under artist / title block, above Listen Now) ── */
+    .recent {
+      width: 100%;
+      max-width: min(340px, 100%);
+      margin: 10px 0 22px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .recent .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .recent-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .recent-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 12px;
+      background: var(--card-bg);
+      transition: border-color 0.2s ease, transform 0.15s ease;
+    }
+    .recent-card:hover {
+      border-color: rgba(245,200,0,0.45);
+      transform: translateX(3px);
+    }
+    .recent-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 3px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: rgba(0,0,0,0.35);
+    }
+    .recent-thumb.placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      color: var(--muted);
+    }
+    .recent-meta { min-width: 0; flex: 1; text-align: left; }
+    .recent-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.15rem;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .recent-cta {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
     }
 
     /* ── Footer ── */
@@ -334,7 +419,8 @@
     ══════════════════════════════ */
     dialog.gate-dialog {
       z-index: 100;
-      width: min(420px, calc(100vw - 28px));
+      width: min(420px, calc(100% - 24px));
+      max-width: calc(100vw - 24px);
       max-height: calc(100vh - 32px);
       overflow-y: auto;
       margin: auto;
@@ -489,10 +575,31 @@
     {% endif %}
 
     <div class="title-block">
-      <p class="artist-name">{{ song.artist|default:"" }}</p>
+      <p class="artist-name">{{ song.artist|default:"'Stro Ifidon" }}</p>
       <h1>{{ song.title|default:"New <span>Drop</span>" }}</h1>
       <p class="sub">Choose your platform</p>
     </div>
+
+    {% if recent_releases %}
+    <section class="recent" aria-label="Also listen to">
+      <div class="section-label">Also listen to</div>
+      <div class="recent-grid">
+        {% for other in recent_releases %}
+        <a class="recent-card" href="{% url 'smartlinks:landing' slug=other.slug %}">
+          {% if other.cover_art %}
+          <img class="recent-thumb" src="{{ other.cover_art.url }}" alt="" width="48" height="48" decoding="async" loading="lazy">
+          {% else %}
+          <span class="recent-thumb placeholder" aria-hidden="true">♪</span>
+          {% endif %}
+          <div class="recent-meta">
+            <div class="recent-title">{{ other.title }}</div>
+            <div class="recent-cta">Open smart link</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
 
     <div class="divider">
       <div class="divider-line"></div>

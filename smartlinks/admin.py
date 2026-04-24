@@ -94,9 +94,11 @@ class SongAdminForm(forms.ModelForm):
 @admin.register(Song)
 class SongAdmin(admin.ModelAdmin):
     form = SongAdminForm
+    autocomplete_fields = ("owner",)
     list_display = (
         "title",
         "slug",
+        "owner",
         "release_at",
         "accent_color",
         "is_published",
@@ -124,6 +126,7 @@ class SongAdmin(admin.ModelAdmin):
                 "fields": (
                     "title",
                     "slug",
+                    "owner",
                     "cover_art",
                     "accent_color",
                     "landing_template",
@@ -208,6 +211,8 @@ class SongAdmin(admin.ModelAdmin):
         return format_html('<a href="{}" target="_blank">{}</a>', url, url)
 
     def save_model(self, request, obj, form, change):
+        if not change and not obj.owner_id and request.user.is_authenticated:
+            obj.owner = request.user
         import_url = (obj.import_from_smart_link or "").strip()
         if import_url:
             try:

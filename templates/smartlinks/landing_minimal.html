@@ -23,12 +23,16 @@
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    html {
+      overflow-x: clip;
+    }
+
     body {
       min-height: 100vh;
       background: var(--black);
       color: var(--text);
       font-family: 'Syne', sans-serif;
-      overflow-x: hidden;
+      overflow-x: clip;
     }
 
     /* ── Grain texture ── */
@@ -90,7 +94,8 @@
     .wrap {
       position: relative;
       z-index: 1;
-      max-width: 480px;
+      width: 100%;
+      max-width: min(480px, 100%);
       margin: 0 auto;
       padding: 0;
       min-height: 100vh;
@@ -102,12 +107,17 @@
     .art-section {
       position: relative;
       width: 100%;
+      height: min(56svh, 92vw, 400px);
+      min-height: 200px;
+      max-height: 400px;
+      overflow: hidden;
       animation: reveal 0.8s ease both;
     }
     .art {
       width: 100%;
-      aspect-ratio: 1;
+      height: 100%;
       object-fit: cover;
+      object-position: center;
       display: block;
       filter: brightness(0.92) contrast(1.05);
     }
@@ -123,33 +133,41 @@
     .art-label {
       position: absolute;
       bottom: 18px;
-      left: 20px;
+      left: 16px;
+      right: auto;
       z-index: 2;
+      max-width: calc(100% - 100px);
       font-family: 'Playfair Display', serif;
       font-style: italic;
-      font-size: clamp(2.4rem, 10vw, 3.6rem);
-      line-height: 0.9;
+      font-size: clamp(1.65rem, 7vw, 3.2rem);
+      line-height: 0.95;
       color: var(--text);
       text-shadow: 0 2px 24px rgba(0,0,0,0.8);
       letter-spacing: -0.01em;
+      overflow-wrap: anywhere;
     }
     .art-label-sub {
       position: absolute;
-      bottom: 20px;
-      right: 20px;
+      bottom: 18px;
+      right: 12px;
+      left: auto;
       z-index: 2;
+      max-width: min(42%, 140px);
       font-family: 'Syne Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.2em;
+      font-size: 9px;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--warm);
       opacity: 0.75;
       text-align: right;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* No cover art fallback — text hero ── */
     .text-hero {
-      padding: 72px 24px 40px;
+      padding: clamp(40px, 12vw, 72px) 20px 32px;
       animation: reveal 0.7s ease both;
     }
     .eyebrow {
@@ -163,8 +181,8 @@
     .text-hero h1 {
       font-family: 'Playfair Display', serif;
       font-style: italic;
-      font-size: clamp(3rem, 12vw, 4.5rem);
-      line-height: 0.9;
+      font-size: clamp(2rem, 9vw, 4.5rem);
+      line-height: 0.95;
       letter-spacing: -0.02em;
       color: var(--text);
     }
@@ -172,7 +190,9 @@
     /* ── Content body ── */
     .content {
       flex: 1;
-      padding: 32px 24px 56px;
+      width: 100%;
+      max-width: 100%;
+      padding: clamp(22px, 5vw, 32px) clamp(14px, 4vw, 24px) clamp(40px, 8vw, 56px);
       animation: fadeUp 0.65s 0.2s ease both;
     }
 
@@ -180,20 +200,26 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 28px;
+      gap: 8px;
+      margin-bottom: clamp(18px, 4vw, 28px);
     }
     .meta-artist {
       font-family: 'Syne Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.16em;
+      font-size: clamp(8px, 2.4vw, 11px);
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--warm);
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .meta-line {
       flex: 1;
+      min-width: 16px;
       height: 1px;
       background: var(--line);
-      margin: 0 14px;
+      margin: 0 clamp(6px, 2vw, 14px);
     }
     .meta-status {
       display: flex;
@@ -248,10 +274,11 @@
       border: 1px solid var(--line);
       border-radius: 3px;
       background: rgba(255,255,255,0.025);
-      padding: 9px 14px;
+      padding: clamp(6px, 2vw, 9px) clamp(10px, 3vw, 14px);
       transition: all 0.2s ease;
       position: relative;
       overflow: hidden;
+      max-width: 100%;
     }
     .platforms a::after {
       content: "";
@@ -278,15 +305,15 @@
       align-items: center;
       justify-content: center;
       flex: 1;
-      min-height: 38px;
-      padding: 4px 10px;
+      min-height: clamp(30px, 9vw, 38px);
+      padding: 3px clamp(6px, 2vw, 10px);
       border-radius: 2px;
       background: rgba(255,255,255,0.95);
     }
     .platform-logo {
       display: block;
-      max-height: 28px;
-      max-width: min(100%, 190px);
+      max-height: clamp(20px, 6vw, 28px);
+      max-width: min(100%, min(190px, 85vw));
       width: auto; height: auto;
       object-fit: contain;
     }
@@ -313,11 +340,12 @@
       opacity: 1;
     }
 
-    /* ── Recent releases ── */
+    /* ── Also listen to (under artist, above Stream) ── */
     .recent {
-      margin-top: 36px;
-      padding-top: 28px;
-      border-top: 1px solid var(--line);
+      margin-top: 18px;
+      margin-bottom: 26px;
+      padding-bottom: 22px;
+      border-bottom: 1px solid var(--line);
     }
     .recent-grid {
       display: flex;
@@ -394,7 +422,8 @@
     ══════════════════════════════ */
     dialog.gate-dialog {
       z-index: 100;
-      width: min(420px, calc(100vw - 28px));
+      width: min(420px, calc(100% - 24px));
+      max-width: calc(100vw - 24px);
       max-height: calc(100vh - 32px);
       overflow-y: auto;
       margin: auto;
@@ -548,6 +577,27 @@
         </span>
       </div>
 
+      {% if recent_releases %}
+      <section class="recent" aria-label="Also listen to">
+        <div class="section-label">Also listen to</div>
+        <div class="recent-grid">
+          {% for other in recent_releases %}
+          <a class="recent-card" href="{% url 'smartlinks:landing' slug=other.slug %}">
+            {% if other.cover_art %}
+            <img class="recent-thumb" src="{{ other.cover_art.url }}" alt="" width="52" height="52" decoding="async" loading="lazy">
+            {% else %}
+            <span class="recent-thumb placeholder" aria-hidden="true">♪</span>
+            {% endif %}
+            <div class="recent-meta">
+              <div class="recent-title">{{ other.title }}</div>
+              <div class="recent-cta">Open smart link</div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
       <div class="section-label">Stream</div>
 
       <div class="platforms">
@@ -575,27 +625,6 @@
           {% endif %}
         {% endfor %}
       </div>
-
-      {% if recent_releases %}
-      <section class="recent" aria-label="Recent releases">
-        <div class="section-label">Recent releases</div>
-        <div class="recent-grid">
-          {% for other in recent_releases %}
-          <a class="recent-card" href="{% url 'smartlinks:landing' slug=other.slug %}">
-            {% if other.cover_art %}
-            <img class="recent-thumb" src="{{ other.cover_art.url }}" alt="" width="52" height="52" decoding="async" loading="lazy">
-            {% else %}
-            <span class="recent-thumb placeholder" aria-hidden="true">♪</span>
-            {% endif %}
-            <div class="recent-meta">
-              <div class="recent-title">{{ other.title }}</div>
-              <div class="recent-cta">Open smart link</div>
-            </div>
-          </a>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
 
       <p class="foot"><span>On Black</span> · Hollywood.stro · Don Productions</p>
     </div>
