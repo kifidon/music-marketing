@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("smartlinks", "0006_song_urls_textfield"),
+        ("smartlinks", "0007_song_release_schedule"),
     ]
 
     operations = [

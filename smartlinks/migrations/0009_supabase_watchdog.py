@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("smartlinks", "0007_song_release_schedule"),
+        ("smartlinks", "0008_song_landing_template"),
     ]
 
     operations = [
