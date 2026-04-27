@@ -7,44 +7,42 @@
   <title>{{ song.title }}{% if artist_display %} · {{ artist_display }}{% endif %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&family=Syne+Mono&family=Syne:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
   <style>
-    :root {
-      --accent: {{ song.accent_color|default:"#b8860b" }};
-      --brass: #c9a227;
-      --ink: #060606;
-      --surface: #0c0a08;
-      --elevated: rgba(18, 14, 12, 0.72);
-      --text: #ebe4d8;
-      --muted: #7d756c;
-      --line: rgba(201, 162, 39, 0.14);
-      --line-strong: rgba(201, 162, 39, 0.28);
-      --cream: #f3ead8;
+    @font-face {
+      font-family: 'Cactus Jack Regular 400';
+      src: url('/static/fonts/Cactus-Jack.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-main: #0a0a0a;
+      --fg: #f5f5f5;
+      --accent-yellow: #fcdc4d;
+      --accent-red: #ff3b30;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-hand: 'Cactus Jack Regular 400', 'Permanent Marker', cursive;
+      --border: rgba(252, 220, 77, 0.15);
+      --border-strong: rgba(252, 220, 77, 0.3);
+      --muted: rgba(245, 245, 245, 0.45);
+    }
 
-    html { overflow-x: clip; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: clip; scroll-behavior: smooth; }
 
     body {
       min-height: 100vh;
-      background: var(--ink);
-      color: var(--text);
-      font-family: 'Syne', system-ui, sans-serif;
+      background: var(--bg-main);
+      color: var(--fg);
+      font-family: var(--font-body);
       overflow-x: clip;
-      font-weight: 400;
     }
 
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      pointer-events: none;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.038'/%3E%3C/svg%3E");
-      mix-blend-mode: overlay;
-    }
-
+    /* ── COVER BG ── */
     .cover-bg {
       position: fixed;
       inset: 0;
@@ -58,491 +56,289 @@
       width: 200vmax; height: 200vmax;
       transform: translate(-50%, -50%);
       object-fit: cover;
-      filter: blur(88px) saturate(0.55) brightness(0.18);
+      filter: blur(80px) saturate(0.4) brightness(0.12);
     }
     .cover-bg::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201, 162, 39, 0.06), transparent 55%),
-        linear-gradient(180deg, rgba(6,6,6,0.55) 0%, rgba(6,6,6,0.2) 45%, rgba(6,6,6,0.92) 100%);
+      background: linear-gradient(180deg, rgba(10,10,10,0.6) 0%, rgba(10,10,10,0.15) 40%, rgba(10,10,10,0.95) 100%);
     }
 
-    .ambient {
-      position: fixed;
-      top: -20vh;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(90vw, 520px);
-      height: min(90vw, 520px);
-      border-radius: 50%;
-      background: radial-gradient(circle, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 68%);
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.85;
-    }
-
+    /* ── LAYOUT ── */
     .wrap {
       position: relative;
       z-index: 1;
       width: 100%;
-      max-width: min(440px, 100%);
+      max-width: min(480px, 100%);
       margin: 0 auto;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    /* ======================================================================
-       SLEEVE LAYOUT — the page is a vinyl record sleeve, not an app screen.
-       ====================================================================== */
-
+    /* ── HEADER ── */
     .sleeve {
-      position: relative;
-      padding: clamp(28px, 8vw, 48px) clamp(20px, 5vw, 28px) 0;
-      animation: reveal 0.9s ease both;
+      padding: clamp(32px, 8vw, 56px) clamp(20px, 5vw, 32px) 0;
+      animation: reveal 0.7s ease both;
     }
 
     .catalog-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-family: 'Syne Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.28em;
-      text-transform: uppercase;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
       color: var(--muted);
-      margin-bottom: clamp(20px, 5vw, 28px);
+      margin-bottom: clamp(24px, 6vw, 36px);
     }
-    .catalog-row .catalog-num { color: var(--brass); }
-    .catalog-row .live-mark { display: inline-flex; align-items: center; gap: 6px; }
-    .catalog-row .live-dot {
-      width: 5px; height: 5px; border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 60%, transparent);
-      animation: pulse 2.8s ease infinite;
+    .catalog-row .catalog-num { color: var(--accent-yellow); }
+    .catalog-row .live-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent-red);
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      box-shadow: 0 0 8px var(--accent-red);
+      animation: pulse 2.5s ease infinite;
     }
     @keyframes pulse {
       0%, 100% { opacity: 1; }
-      50%      { opacity: 0.35; }
+      50% { opacity: 0.3; }
     }
 
-    /* The sleeve "stage": cover art square with a vinyl peeking out from the right */
+    /* ── COVER ART ── */
     .sleeve-stage {
       position: relative;
-      width: min(58vw, 280px);
-      max-width: calc(100% - 80px);
+      width: min(60vw, 260px);
       aspect-ratio: 1 / 1;
       margin: 0 auto;
-      isolation: isolate;
     }
     .sleeve-cover {
-      position: absolute;
-      inset: 0;
       width: 100%; height: 100%;
       object-fit: cover;
-      border-radius: 2px;
-      box-shadow:
-        0 30px 60px -20px rgba(0,0,0,0.85),
-        0 0 0 1px rgba(0,0,0,0.6),
-        inset 0 0 0 1px rgba(201, 162, 39, 0.18);
-      z-index: 2;
-      filter: contrast(1.04) saturate(0.96);
-    }
-    .sleeve-cover-tape {
-      position: absolute;
-      top: -8px; left: 50%;
-      transform: translateX(-50%) rotate(-1.2deg);
-      width: 64px; height: 18px;
-      background: linear-gradient(180deg, rgba(255,245,205,0.32), rgba(255,245,205,0.16));
-      border: 1px solid rgba(255,245,205,0.18);
-      z-index: 3;
-      pointer-events: none;
-    }
-    .sleeve-vinyl {
-      position: absolute;
-      top: 50%; left: 54%;
-      transform: translateY(-50%);
-      width: 82%;
-      aspect-ratio: 1 / 1;
-      border-radius: 50%;
-      background:
-        repeating-radial-gradient(circle at center,
-          #0a0806 0px, #0a0806 1px,
-          #181410 2px, #0a0806 3px),
-        radial-gradient(circle at 38% 32%, rgba(255, 240, 200, 0.06), transparent 55%);
-      box-shadow:
-        inset 0 0 50px rgba(0,0,0,0.85),
-        0 14px 30px rgba(0,0,0,0.6),
-        0 0 0 1px rgba(0,0,0,0.5);
-      z-index: 1;
-      animation: vinyl-spin 18s linear infinite;
-    }
-    .sleeve-vinyl::before {
-      content: "";
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 38%; aspect-ratio: 1/1;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 30%, #d8a93a, #9a7322 70%, #6b4f15 100%);
-      box-shadow: inset 0 -4px 10px rgba(0,0,0,0.4), inset 0 2px 6px rgba(255,240,180,0.4);
-    }
-    .sleeve-vinyl::after {
-      content: "";
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 5%; aspect-ratio: 1/1;
-      border-radius: 50%;
-      background: var(--ink);
-      z-index: 2;
-    }
-    .vinyl-text {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 3;
-    }
-    .vinyl-text text {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-weight: 700;
-      font-size: 5.5px;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      fill: #ffffff;
-      opacity: 1;
-      paint-order: stroke;
-      stroke: rgba(0, 0, 0, 0.55);
-      stroke-width: 0.4;
-    }
-    .vinyl-text .vinyl-text-song {
-      letter-spacing: 0.2em;
-      font-style: italic;
-      font-weight: 600;
-      fill: #ffffff;
-    }
-    .vinyl-text .vinyl-text-side {
-      font-family: 'Syne Mono', 'Syne', monospace;
-      font-style: normal;
-      font-weight: 400;
-      font-size: 4.5px;
-      letter-spacing: 0.5em;
-      text-transform: uppercase;
-      fill: #ffffff;
-      opacity: 0.9;
-    }
-    @keyframes vinyl-spin {
-      to { transform: translateY(-50%) rotate(360deg); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .sleeve-vinyl { animation: none; }
+      display: block;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.8), 0 0 0 2px rgba(252,220,77,0.2);
     }
 
-    /* Title block sits below the stage — sleeve-corner typography */
+    /* ── TITLES ── */
     .sleeve-titles {
-      margin: clamp(24px, 7vw, 36px) 0 clamp(6px, 2vw, 10px);
+      margin: clamp(24px, 6vw, 36px) 0 clamp(8px, 2vw, 12px);
     }
     .sleeve-eyebrow {
-      font-family: 'Syne Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      color: var(--brass);
-      margin-bottom: 10px;
+      font-family: var(--font-hand);
+      color: var(--accent-red);
+      font-size: 1.1rem;
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.5);
+      margin-bottom: 8px;
     }
     .sleeve-title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-style: italic;
-      font-weight: 700;
-      font-size: clamp(2.2rem, 11vw, 3.6rem);
-      line-height: 0.94;
-      letter-spacing: -0.025em;
-      color: var(--cream);
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 13vw, 5rem);
+      line-height: 0.92;
+      letter-spacing: 0.02em;
+      color: var(--fg);
+      text-transform: uppercase;
       overflow-wrap: anywhere;
     }
     .sleeve-artist {
-      margin-top: 12px;
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1rem, 3.6vw, 1.15rem);
-      font-style: italic;
-      color: rgba(235, 228, 216, 0.8);
-      letter-spacing: 0.02em;
-    }
-    .sleeve-artist .sep {
-      display: inline-block;
-      margin: 0 8px;
-      color: var(--brass);
-      opacity: 0.7;
+      margin-top: 10px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
     }
     .sleeve-artist-row {
-      margin-top: 12px;
+      margin-top: 14px;
       display: flex;
       align-items: center;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 16px;
     }
-    .sleeve-artist-row .sleeve-artist {
-      margin-top: 0;
-    }
+
+    /* Social icons */
     .sleeve-follow {
       display: flex;
       align-items: center;
       gap: 14px;
     }
     .sleeve-follow a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      color: #ffffff;
-      opacity: 0.85;
+      color: var(--accent-yellow);
+      font-size: 1.4rem;
       text-decoration: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      transition: color 0.2s;
     }
-    .sleeve-follow a:hover { opacity: 1; transform: translateY(-1px); }
-    .sleeve-follow svg {
-      width: 22px;
-      height: 22px;
-      display: block;
-    }
-    .sleeve-follow svg:not([fill="none"]) {
-      fill: currentColor;
-    }
+    .sleeve-follow a:hover { color: var(--accent-red); }
 
-    /* Liner notes — pull-quote with brass drop-cap */
+    /* Description */
     .liner {
-      margin: 10px 0 0;
-      padding: 0;
+      margin: 14px 0 0;
     }
     .liner p {
-      font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-      font-size: clamp(0.88rem, 3.2vw, 0.98rem);
-      font-weight: 400;
-      line-height: 1.45;
-      color: rgba(235, 228, 216, 0.78);
-      letter-spacing: 0.005em;
-      margin: 0;
-    }
-    .liner p::first-letter {
-      font-weight: inherit;
-      color: inherit;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--muted);
     }
 
-    /* ======================================================================
-       TRACKLIST — printed-sleeve style platform list.
-       Numbered rows with brass leader dots. Tap-anywhere targets.
-       ====================================================================== */
+    /* ── CONTENT ── */
+    .content {
+      flex: 1;
+      width: 100%;
+      padding: 0 clamp(20px, 5vw, 32px) clamp(40px, 10vw, 64px);
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
 
+    /* ── SECTION HEADER ── */
     .tracklist-head {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
-      margin: clamp(16px, 4vw, 22px) 0 clamp(10px, 2.5vw, 14px);
+      margin: clamp(20px, 5vw, 28px) 0 clamp(12px, 3vw, 16px);
       padding-bottom: 12px;
-      border-bottom: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--border-strong);
     }
     .tracklist-head h2 {
-      font-family: 'Cormorant Garamond', 'Playfair Display', serif;
-      font-weight: 400;
-      font-size: clamp(1.15rem, 4.2vw, 1.35rem);
-      color: rgba(235, 228, 216, 0.78);
-      letter-spacing: 0.005em;
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      letter-spacing: 0.05em;
+      color: var(--fg);
+      text-transform: uppercase;
     }
     .tracklist-head .side {
-      font-family: 'Syne Mono', monospace;
-      font-size: 8px;
-      font-weight: 400;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      color: var(--brass);
-      opacity: 0.85;
+      font-family: var(--font-hand);
+      font-size: 0.85rem;
+      color: var(--accent-yellow);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
     }
 
+    /* ── PLATFORM LIST ── */
     .tracklist {
       list-style: none;
-      margin: 0 0 clamp(28px, 7vw, 36px);
+      margin: 0 0 clamp(28px, 7vw, 40px);
       padding: 0;
     }
     .track {
       display: grid;
       grid-template-columns: auto 1fr auto;
-      align-items: baseline;
+      align-items: center;
       gap: 0;
-      padding: clamp(16px, 4.4vw, 20px) 4px;
-      border-bottom: 1px dashed rgba(201, 162, 39, 0.18);
+      padding: clamp(14px, 4vw, 18px) 6px;
+      border-bottom: 1px solid var(--border);
       text-decoration: none;
       color: inherit;
       position: relative;
-      transition: padding-left 0.2s ease, color 0.2s ease;
-      min-height: 56px;
+      transition: padding-left 0.2s, background 0.2s;
       -webkit-tap-highlight-color: transparent;
     }
     .track:last-child { border-bottom: none; }
-    .track::after {
-      content: "";
-      position: absolute;
-      left: 0; right: 0; top: 0; bottom: 0;
-      background: linear-gradient(90deg,
-        color-mix(in srgb, var(--accent) 10%, transparent),
-        transparent 60%);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
+    .track:hover {
+      padding-left: 12px;
+      background: rgba(252, 220, 77, 0.04);
     }
-    .track:hover::after,
-    .track:active::after { opacity: 1; }
-    .track:hover { padding-left: 10px; }
 
     .track-num {
-      font-family: 'Syne Mono', monospace;
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      color: var(--brass);
-      padding-right: 14px;
-      min-width: 28px;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      color: var(--accent-yellow);
+      padding-right: 16px;
+      min-width: 32px;
     }
     .track-name {
-      font-family: 'Cormorant Garamond', 'Playfair Display', serif;
-      font-weight: 400;
-      font-size: clamp(1.1rem, 4.4vw, 1.3rem);
-      color: rgba(235, 228, 216, 0.92);
-      letter-spacing: 0.005em;
-      position: relative;
-      overflow: hidden;
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 5vw, 1.7rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--fg);
       white-space: nowrap;
+      overflow: hidden;
       text-overflow: ellipsis;
     }
-    .side-b .track-name {
-      font-style: italic;
-    }
-    .track-name::after { display: none; }
     .track-cta {
-      font-family: 'Syne Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--brass);
+      font-family: var(--font-hand);
+      font-size: 0.9rem;
+      color: var(--accent-yellow);
       padding-left: 14px;
       white-space: nowrap;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: color 0.2s, transform 0.2s;
+      gap: 4px;
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+      transition: color 0.2s;
     }
     .track-cta::after {
       content: "›";
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-size: 1.4em;
       line-height: 1;
       transition: transform 0.2s;
     }
-    .track:hover .track-cta { color: var(--cream); }
-    .track:hover .track-cta::after { transform: translateX(3px); }
+    .track:hover .track-cta { color: var(--accent-red); }
+    .track:hover .track-cta::after { transform: translateX(4px); }
 
-    /* Side B (also-listen-to) — same tracklist visual language */
+    /* ── SIDE B (other releases) ── */
     .side-b-divider {
       display: flex;
       align-items: center;
       gap: 14px;
-      margin: clamp(28px, 7vw, 38px) 0 clamp(14px, 3vw, 18px);
-      font-family: 'Syne Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      color: var(--brass);
+      margin: clamp(28px, 7vw, 40px) 0 clamp(14px, 3vw, 20px);
+      font-family: var(--font-hand);
+      font-size: 1rem;
+      color: var(--accent-red);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
     }
     .side-b-divider::before,
     .side-b-divider::after {
       content: "";
       flex: 1;
       height: 1px;
-      background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
+      background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
     }
-    .side-b {
-      list-style: none;
-      margin: 0 0 clamp(20px, 5vw, 28px);
-      padding: 0;
-    }
-    .side-b .track-thumb {
-      grid-row: span 1;
-      width: 44px; height: 44px;
-      border-radius: 2px;
-      object-fit: cover;
-      margin-right: 14px;
-      align-self: center;
-      box-shadow: 0 0 0 1px rgba(201,162,39,0.18);
-    }
+    .side-b { list-style: none; margin: 0 0 clamp(20px, 5vw, 28px); padding: 0; }
     .side-b .track {
       grid-template-columns: auto auto 1fr auto;
       align-items: center;
     }
-    .side-b .track-name::after { display: none; }
-    .side-b .track-name {
-      white-space: normal;
-      font-size: clamp(1.05rem, 4vw, 1.2rem);
+    .side-b .track-thumb {
+      width: 44px; height: 44px;
+      object-fit: cover;
+      margin-right: 14px;
+      box-shadow: 0 0 0 1px rgba(252,220,77,0.2);
     }
 
-    /* Brass-foil credit footer */
+    /* ── CREDIT FOOTER ── */
     .credit {
-      margin-top: clamp(28px, 7vw, 36px);
-      padding: clamp(20px, 5vw, 26px) clamp(18px, 4vw, 22px);
-      border: 1px solid var(--line);
-      border-radius: 2px;
-      background:
-        linear-gradient(180deg, rgba(201,162,39,0.05), rgba(201,162,39,0.01)),
-        rgba(255,255,255,0.015);
+      margin-top: clamp(28px, 7vw, 40px);
+      padding: clamp(18px, 5vw, 24px) clamp(16px, 4vw, 20px);
+      border: 2px solid var(--border-strong);
+      background: rgba(252, 220, 77, 0.03);
       text-align: center;
-      font-family: 'Syne Mono', monospace;
-      font-size: 9.5px;
-      letter-spacing: 0.28em;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
       line-height: 2;
     }
     .credit .credit-name {
       display: block;
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: 1.1rem;
-      letter-spacing: -0.005em;
+      font-family: var(--font-hand);
+      font-size: 1.4rem;
       text-transform: none;
-      color: var(--cream);
+      letter-spacing: 0.02em;
+      color: var(--accent-yellow);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
       margin-bottom: 6px;
     }
-    .credit .credit-brass { color: var(--brass); }
+    .credit .credit-accent { color: var(--accent-red); }
 
-    .content {
-      flex: 1;
-      width: 100%;
-      max-width: 100%;
-      padding: 0 clamp(20px, 5vw, 28px) clamp(36px, 9vw, 56px);
-      animation: fadeUp 0.7s 0.1s ease both;
-    }
-    .foot {
-      margin-top: clamp(20px, 5vw, 28px);
-      font-family: 'Syne Mono', monospace;
-      font-size: 8px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--muted);
-      opacity: 0.55;
-      text-align: center;
-    }
-
-    @keyframes reveal {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
+    /* ── GATE DIALOG ── */
     dialog.gate-dialog {
       z-index: 100;
       width: min(420px, calc(100% - 24px));
@@ -551,55 +347,52 @@
       overflow-y: auto;
       margin: auto;
       padding: 0;
-      border: 1px solid var(--line);
-      border-radius: 3px;
-      background: rgba(10, 8, 7, 0.98);
-      color: var(--text);
-      box-shadow: 0 32px 80px rgba(0,0,0,0.88), 0 0 0 1px color-mix(in srgb, var(--accent) 12%, transparent) inset;
-      font-family: 'Syne', sans-serif;
+      border: 2px solid var(--border-strong);
+      background: #0d0d0d;
+      color: var(--fg);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(252,220,77,0.08) inset;
+      font-family: var(--font-body);
     }
     dialog.gate-dialog::backdrop {
-      background: rgba(0,0,0,0.84);
-      backdrop-filter: blur(8px);
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(10px);
     }
+
     .gate-inner { padding: 28px 24px 24px; }
     .gate-eyebrow {
-      font-family: 'Syne Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--brass);
+      font-family: var(--font-hand);
+      font-size: 1rem;
+      color: var(--accent-red);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
       margin-bottom: 10px;
     }
     .gate-inner h2 {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-size: 1.85rem;
-      line-height: 1;
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       margin: 0 0 8px;
-      color: var(--cream);
+      color: var(--fg);
     }
     .gate-inner .lead {
       margin: 0 0 6px;
       color: var(--muted);
-      font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-      font-style: italic;
-      font-size: 1rem;
-      line-height: 1.5;
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      line-height: 1.55;
     }
     .gate-inner .gate-sig {
       margin: 0 0 22px;
-      font-family: 'Dancing Script', 'Pinyon Script', 'Allura', cursive;
-      font-size: 1.45rem;
-      color: var(--brass);
-      letter-spacing: 0.01em;
-      line-height: 1;
+      font-family: var(--font-hand);
+      font-size: 1.4rem;
+      color: var(--accent-yellow);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
     }
     .gate-inner label {
       display: block;
-      font-family: 'Syne Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.2em;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
       margin: 14px 0 6px;
@@ -607,17 +400,16 @@
     .gate-inner input {
       width: 100%;
       padding: 13px 14px;
-      border-radius: 2px;
-      border: 1px solid var(--line);
+      border: 2px solid var(--border);
       background: rgba(255,255,255,0.03);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
+      color: var(--fg);
+      font-family: var(--font-body);
       font-size: 0.95rem;
       transition: border-color 0.15s;
     }
     .gate-inner input:focus {
       outline: none;
-      border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+      border-color: var(--accent-yellow);
     }
     .gate-actions {
       display: flex;
@@ -627,32 +419,31 @@
     .gate-actions button {
       flex: 1;
       padding: 13px 14px;
-      border-radius: 2px;
-      font-family: 'Syne', sans-serif;
-      font-size: 0.88rem;
-      font-weight: 600;
-      letter-spacing: 0.04em;
+      font-family: var(--font-hand);
+      font-size: 1rem;
       cursor: pointer;
-      border: 1px solid var(--line);
+      border: 2px solid var(--border);
       background: transparent;
       color: var(--muted);
       transition: all 0.15s;
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.2);
     }
-    .gate-actions button:hover { color: var(--text); border-color: var(--line-strong); }
+    .gate-actions button:hover { color: var(--fg); border-color: var(--border-strong); }
     .gate-actions button.primary {
-      border-color: color-mix(in srgb, var(--accent) 50%, var(--line));
-      background: color-mix(in srgb, var(--accent) 14%, transparent);
-      color: var(--cream);
+      border-color: var(--accent-yellow);
+      background: var(--accent-yellow);
+      color: #0a0a0a;
     }
     .gate-actions button.primary:hover {
-      background: color-mix(in srgb, var(--accent) 24%, transparent);
+      background: #0a0a0a;
+      color: var(--accent-yellow);
     }
     .gate-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
     .gate-cancel-row { margin-top: 12px; text-align: center; }
     .gate-cancel-row button {
-      font-family: 'Syne Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.15em;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       padding: 8px 12px;
       border: none;
@@ -662,76 +453,71 @@
       text-decoration: underline;
       text-underline-offset: 3px;
     }
-    .gate-cancel-row button:hover { color: var(--text); }
+    .gate-cancel-row button:hover { color: var(--fg); }
     .gate-err {
-      font-family: 'Syne Mono', monospace;
-      font-size: 11px;
-      color: #e08080;
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      color: var(--accent-red);
       margin-top: 10px;
     }
 
-    /* Welcome view shown after a successful submit, before redirect */
-    .gate-welcome { display: none; padding: 40px 26px 32px; text-align: center; animation: fadeUp 0.5s ease both; }
+    /* ── WELCOME VIEW ── */
+    .gate-welcome {
+      display: none;
+      padding: 48px 28px 36px;
+      text-align: center;
+      animation: fadeUp 0.5s ease both;
+    }
     .gate-welcome.is-on { display: block; }
     .gate-welcome .welcome-eyebrow {
-      font-family: 'Syne Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      color: var(--brass);
+      font-family: var(--font-hand);
+      font-size: 1rem;
+      color: var(--accent-red);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
       margin-bottom: 14px;
     }
     .gate-welcome h2 {
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-weight: 700;
-      font-size: clamp(1.9rem, 8vw, 2.5rem);
-      line-height: 1.02;
-      letter-spacing: -0.02em;
-      color: var(--cream);
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 9vw, 3rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--fg);
       margin: 0 0 18px;
       overflow-wrap: anywhere;
     }
-    .gate-welcome h2 .wn-name {
-      color: color-mix(in srgb, var(--accent) 90%, var(--cream));
-    }
+    .gate-welcome h2 .wn-name { color: var(--accent-yellow); }
     .gate-welcome .welcome-msg {
-      font-family: 'Cormorant Garamond', serif;
-      font-style: italic;
-      font-size: 1.1rem;
-      line-height: 1.55;
-      color: rgba(235, 228, 216, 0.86);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--muted);
       margin: 0 auto 28px;
       max-width: 30ch;
     }
     .gate-welcome .welcome-sig {
-      font-family: 'Dancing Script', 'Playfair Display', cursive;
-      font-weight: 700;
-      font-size: 2.2rem;
-      line-height: 1;
-      color: color-mix(in srgb, var(--accent) 85%, var(--cream));
-      margin-top: 18px;
-      letter-spacing: 0.01em;
-      transform: rotate(-4deg);
+      font-family: var(--font-hand);
+      font-size: 2rem;
+      color: var(--accent-yellow);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
       display: inline-block;
-    }
-    .gate-welcome .welcome-sig::before {
-      content: "— ";
-      font-family: 'Playfair Display', serif;
-      font-style: italic;
-      font-weight: 400;
-      color: var(--muted);
-      margin-right: 4px;
-      vertical-align: 6px;
     }
     .gate-welcome .welcome-redirect {
       margin-top: 22px;
-      font-family: 'Syne Mono', monospace;
-      font-size: 9px;
-      letter-spacing: 0.28em;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
-      opacity: 0.7;
+    }
+
+    @keyframes reveal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -743,71 +529,38 @@
   </div>
   {% endif %}
 
-  <div class="ambient" aria-hidden="true"></div>
-
   <div class="wrap">
     <header class="sleeve">
       <div class="catalog-row">
-        <span class="catalog-num">CAT · {{ song.slug|slice:":8"|upper }}</span>
+        <span class="catalog-num">{{ song.slug|slice:":8"|upper }}</span>
         <span class="live-mark"><span class="live-dot"></span> Out Now · {% now "Y" %}</span>
       </div>
 
       {% if song.cover_art %}
-      <div class="sleeve-stage" aria-hidden="false">
-        <div class="sleeve-vinyl" aria-hidden="true">
-          <svg class="vinyl-text" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-            <defs>
-              <path id="vinyl-ring-top-{{ song.slug }}"
-                    d="M 28,50 a 22,22 0 0,1 44,0"
-                    fill="none"/>
-              <path id="vinyl-ring-bot-{{ song.slug }}"
-                    d="M 28,50 a 22,22 0 1,0 44,0"
-                    fill="none"/>
-            </defs>
-            <text>
-              <textPath href="#vinyl-ring-top-{{ song.slug }}" startOffset="50%" text-anchor="middle">
-                {{ song.title }}
-              </textPath>
-            </text>
-            <text class="vinyl-text-side">
-              <textPath href="#vinyl-ring-bot-{{ song.slug }}" startOffset="50%" text-anchor="middle">
-                Side A
-              </textPath>
-            </text>
-          </svg>
-        </div>
+      <div class="sleeve-stage">
         <img class="sleeve-cover" src="{{ song.cover_art.url }}" alt="{{ song.title }} cover art" fetchpriority="high">
-        <span class="sleeve-cover-tape" aria-hidden="true"></span>
       </div>
       {% endif %}
 
       <div class="sleeve-titles">
         <div class="sleeve-eyebrow">A Single{% if artist_display %} · {{ artist_display }}{% endif %}</div>
         <h1 class="sleeve-title">{{ song.title }}</h1>
+
         {% if artist_display or owner_social_links %}
         <div class="sleeve-artist-row">
-          {% if artist_display %}<div class="sleeve-artist"><em>{{ artist_display }}</em></div>{% endif %}
+          {% if artist_display %}
+          <div class="sleeve-artist">{{ artist_display }}</div>
+          {% endif %}
           {% if owner_social_links %}
           <div class="sleeve-follow" aria-label="Follow the artist">
-          {% for s in owner_social_links %}
-          <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ s.label }}">
-            {% if s.key == "instagram" %}
-            <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="3" width="26" height="26" rx="7.5" fill="none"/>
-              <circle cx="16" cy="16" r="5.6" fill="none"/>
-              <circle cx="23" cy="9" r="1.4" fill="currentColor" stroke="none"/>
-            </svg>
-            {% elif s.key == "tiktok" %}
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M16.6 5.2a5.7 5.7 0 0 1-1.06-2.2H12.5v12.27a2.78 2.78 0 1 1-2.78-2.78c.3 0 .6.05.86.13V9.46a5.65 5.65 0 0 0-.86-.07 5.84 5.84 0 1 0 5.84 5.84V8.84a8.7 8.7 0 0 0 5.04 1.6V7.36a5.66 5.66 0 0 1-3.99-2.16z"/>
-            </svg>
-            {% else %}
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21.6 7.2a2.5 2.5 0 0 0-1.76-1.77C18.27 5 12 5 12 5s-6.27 0-7.84.43A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.76 1.77C5.73 19 12 19 12 19s6.27 0 7.84-.43a2.5 2.5 0 0 0 1.76-1.77A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3-5.2 3z"/>
-            </svg>
-            {% endif %}
-          </a>
-          {% endfor %}
+            {% for s in owner_social_links %}
+            <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ s.label }}">
+              {% if s.key == "instagram" %}<i class="fa-brands fa-instagram"></i>
+              {% elif s.key == "tiktok" %}<i class="fa-brands fa-tiktok"></i>
+              {% else %}<i class="fa-brands fa-youtube"></i>
+              {% endif %}
+            </a>
+            {% endfor %}
           </div>
           {% endif %}
         </div>
@@ -824,7 +577,7 @@
     <div class="content">
 
       {% if recent_releases %}
-      <div class="side-b-divider" aria-hidden="true">More from {% if artist_display %}{{ artist_display }}{% else %}the artist{% endif %}</div>
+      <div class="side-b-divider">More from {% if artist_display %}{{ artist_display }}{% else %}the artist{% endif %}</div>
       <ol class="tracklist side-b" aria-label="More releases">
         {% for other in recent_releases %}
         <a class="track" href="{% url 'smartlinks:landing' slug=other.slug %}">
@@ -832,7 +585,7 @@
           {% if other.cover_art %}
           <img class="track-thumb" src="{{ other.cover_art.url }}" alt="" width="44" height="44" decoding="async" loading="lazy">
           {% else %}
-          <span class="track-thumb" aria-hidden="true" style="background:var(--surface);"></span>
+          <span class="track-thumb" aria-hidden="true" style="background:#1a1a1a;"></span>
           {% endif %}
           <span class="track-name">{{ other.title }}</span>
           <span class="track-cta">Open</span>
@@ -842,7 +595,8 @@
       {% endif %}
 
       <div class="tracklist-head">
-        <h2>Stream the record</h2>
+        <h2>Stream</h2>
+        <span class="side">Pick a platform</span>
       </div>
 
       <ol class="tracklist" aria-label="Streaming platforms">
@@ -870,7 +624,7 @@
 
       <div class="credit">
         {% if artist_display %}<span class="credit-name">{{ artist_display }}</span>{% endif %}
-        <span class="credit-brass">For da general public</span> · {% now "Y" %}
+        <span class="credit-accent">For da general public</span> · {% now "Y" %}
         <br>All rights reserved
       </div>
     </div>
@@ -879,10 +633,10 @@
   {% if not gate_unlocked %}
   <dialog id="gate-modal" class="gate-dialog" aria-labelledby="gate-title">
     <div class="gate-inner" id="gate-form-view">
-      <div class="gate-eyebrow">Join Da members</div>
-      <h2 id="gate-title">Hollywood&hellip;</h2>
+      <div class="gate-eyebrow">Join "Those Kids!"</div>
+      <h2 id="gate-title">Wassup&hellip;</h2>
       <p class="lead" id="gate-lead">Welcome to my close circle&hellip; We&rsquo;re better than everyone.</p>
-      <div class="gate-sig">&mdash; &rsquo;Stro Ifidon</div>
+      <div class="gate-sig">— That Kid 104!</div>
       <form id="gate-form" method="post">
         {% csrf_token %}
         <label for="gate-name">Name</label>
@@ -891,7 +645,7 @@
         <input id="gate-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
         <div class="gate-actions">
           <button type="button" id="gate-maybe-later">Skip</button>
-          <button type="submit" class="primary" id="gate-submit">Save &amp; continue</button>
+          <button type="submit" class="primary" id="gate-submit">Let Me In</button>
         </div>
         <div class="gate-cancel-row">
           <button type="button" id="gate-cancel">Cancel</button>
@@ -900,10 +654,10 @@
       </form>
     </div>
     <div class="gate-welcome" id="gate-welcome-view" aria-live="polite">
-      <div class="welcome-eyebrow">Welcome aboard</div>
-      <h2>Hollywood, <span class="wn-name" id="gate-welcome-name">friend</span></h2>
-      <p class="welcome-msg">Welcome to Hollywood&hellip; we&rsquo;re better than everyone.</p>
-      <div class="welcome-sig">'Stro</div>
+      <div class="welcome-eyebrow">You're In</div>
+      <h2>Wassup, <span class="wn-name" id="gate-welcome-name">G</span></h2>
+      <p class="welcome-msg">Welcome to the sqaud. New music, drops & shows — you'll know first.</p>
+      <div class="welcome-sig">That Kid 104!</div>
       <div class="welcome-redirect">Taking you there&hellip;</div>
     </div>
   </dialog>
@@ -911,7 +665,6 @@
 (function () {
   const modal = document.getElementById("gate-modal");
   const form = document.getElementById("gate-form");
-  const lead = document.getElementById("gate-lead");
   const errBox = document.getElementById("gate-errors");
   const cancel = document.getElementById("gate-cancel");
   let postUrl = "";
@@ -930,13 +683,14 @@
   const welcomeName = document.getElementById("gate-welcome-name");
   const titleEl = document.getElementById("gate-title");
   const nameInput = document.getElementById("gate-name");
-  const DEFAULT_TITLE = "Hollywood\u2026";
+  const DEFAULT_TITLE = "Wassup\u2026";
+
   function updateTitleFromName() {
     if (!titleEl) return;
     const v = (nameInput && nameInput.value || "").trim();
     if (!v) { titleEl.textContent = DEFAULT_TITLE; return; }
     const first = v.split(/\s+/)[0];
-    titleEl.textContent = "Hollywood " + first;
+    titleEl.textContent = "Wassup " + first;
   }
   if (nameInput) nameInput.addEventListener("input", updateTitleFromName);
 
@@ -945,7 +699,7 @@
     if (welcomeView) welcomeView.classList.remove("is-on");
   }
   function showWelcomeView(displayName) {
-    if (welcomeName) welcomeName.textContent = displayName || "friend";
+    if (welcomeName) welcomeName.textContent = displayName || "G";
     if (formView) formView.style.display = "none";
     if (welcomeView) welcomeView.classList.add("is-on");
   }
@@ -953,12 +707,8 @@
   function openModal(url, destLabel, directUrl) {
     postUrl = url;
     outboundUrl = directUrl || "";
-    // Lead copy is static (artist voice). destLabel intentionally unused here.
     var ml = document.getElementById("gate-maybe-later");
-    if (ml) {
-      ml.textContent = outboundUrl ? "Skip" : "Maybe later";
-      ml.disabled = !outboundUrl;
-    }
+    if (ml) { ml.textContent = outboundUrl ? "Skip" : "Maybe later"; ml.disabled = !outboundUrl; }
     showErr("");
     showFormView();
     var email = document.getElementById("gate-email");
@@ -966,10 +716,7 @@
     var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
     email.value = ""; name.value = "";
     updateTitleFromName();
-    if (csrfIn) {
-      var fromCookie = readCookie("csrftoken");
-      if (fromCookie) csrfIn.value = fromCookie;
-    }
+    if (csrfIn) { var fromCookie = readCookie("csrftoken"); if (fromCookie) csrfIn.value = fromCookie; }
     try {
       if (modal && typeof modal.showModal === "function") { modal.showModal(); name.focus(); }
       else { window.location.href = url; }
@@ -979,7 +726,7 @@
   document.querySelectorAll("a.gate-link").forEach(function(a) {
     a.addEventListener("click", function(e) {
       e.preventDefault();
-      openModal(a.getAttribute("href"), a.dataset.destLabel || a.getAttribute("aria-label") || "", a.dataset.outboundUrl || "");
+      openModal(a.getAttribute("href"), a.dataset.destLabel || "", a.dataset.outboundUrl || "");
     });
   });
 
