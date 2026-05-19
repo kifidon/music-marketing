@@ -533,7 +533,7 @@
     <header class="sleeve">
       <div class="catalog-row">
         <span class="catalog-num">{{ song.slug|slice:":8"|upper }}</span>
-        <span class="live-mark"><span class="live-dot"></span></span>
+        <span class="live-mark"><span class="live-dot"></span> Coming Soon · {% now "Y" %}</span>
       </div>
 
       {% if song.cover_art %}
