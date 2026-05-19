@@ -1,0 +1,771 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ song.title }}{% if artist_display %} · {{ artist_display }}{% endif %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <style>
+    @font-face {
+      font-family: 'Cactus Jack Regular 400';
+      src: url('/static/fonts/Cactus-Jack.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --bg-main: #0a0a0a;
+      --fg: #f5f5f5;
+      --accent-yellow: #fcdc4d;
+      --accent-red: #ff3b30;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-hand: 'Cactus Jack Regular 400', 'Permanent Marker', cursive;
+      --border: rgba(252, 220, 77, 0.15);
+      --border-strong: rgba(252, 220, 77, 0.3);
+      --muted: rgba(245, 245, 245, 0.45);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: clip; scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg-main);
+      color: var(--fg);
+      font-family: var(--font-body);
+      overflow-x: clip;
+    }
+
+    /* ── COVER BG ── */
+    .cover-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .cover-bg img {
+      position: absolute;
+      left: 50%; top: 50%;
+      width: 200vmax; height: 200vmax;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      filter: blur(80px) saturate(0.4) brightness(0.12);
+    }
+    .cover-bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(10,10,10,0.6) 0%, rgba(10,10,10,0.15) 40%, rgba(10,10,10,0.95) 100%);
+    }
+
+    /* ── LAYOUT ── */
+    .wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: min(480px, 100%);
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    .sleeve {
+      padding: clamp(32px, 8vw, 56px) clamp(20px, 5vw, 32px) 0;
+      animation: reveal 0.7s ease both;
+    }
+
+    .catalog-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      margin-bottom: clamp(24px, 6vw, 36px);
+    }
+    .catalog-row .catalog-num { color: var(--accent-yellow); }
+    .catalog-row .live-mark {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent-red);
+    }
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-red);
+      box-shadow: 0 0 8px var(--accent-red);
+      animation: pulse 2.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── COVER ART ── */
+    .sleeve-stage {
+      position: relative;
+      width: min(60vw, 260px);
+      aspect-ratio: 1 / 1;
+      margin: 0 auto;
+    }
+    .sleeve-cover {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.8), 0 0 0 2px rgba(252,220,77,0.2);
+    }
+
+    /* ── TITLES ── */
+    .sleeve-titles {
+      margin: clamp(24px, 6vw, 36px) 0 clamp(8px, 2vw, 12px);
+    }
+    .sleeve-eyebrow {
+      font-family: var(--font-hand);
+      color: var(--accent-red);
+      font-size: 2.1rem;
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.5);
+      margin-bottom: 8px;
+    }
+    .sleeve-title {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 13vw, 5rem);
+      line-height: 0.92;
+      letter-spacing: 0.02em;
+      color: var(--fg);
+      text-transform: uppercase;
+      overflow-wrap: anywhere;
+    }
+    .sleeve-artist {
+      margin-top: 10px;
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .sleeve-artist-row {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    /* Social icons */
+    .sleeve-follow {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .sleeve-follow a {
+      color: var(--accent-yellow);
+      font-size: 1.4rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .sleeve-follow a:hover { color: var(--accent-red); }
+
+    /* Description */
+    .liner {
+      margin: 14px 0 0;
+    }
+    .liner p {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      line-height: 1.65;
+      color: var(--muted);
+    }
+
+    /* ── CONTENT ── */
+    .content {
+      flex: 1;
+      width: 100%;
+      padding: 0 clamp(20px, 5vw, 32px) clamp(40px, 10vw, 64px);
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    /* ── SECTION HEADER ── */
+    .tracklist-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: clamp(20px, 5vw, 28px) 0 clamp(12px, 3vw, 16px);
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-strong);
+    }
+    .tracklist-head h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.8rem, 6vw, 2.4rem);
+      letter-spacing: 0.05em;
+      color: var(--fg);
+      text-transform: uppercase;
+    }
+    .tracklist-head .side {
+      font-family: var(--font-hand);
+      font-size: 1.85rem;
+      color: var(--accent-yellow);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+    }
+
+    /* ── PLATFORM LIST ── */
+    .tracklist {
+      list-style: none;
+      margin: 0 0 clamp(28px, 7vw, 40px);
+      padding: 0;
+    }
+    .track {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0;
+      padding: clamp(14px, 4vw, 18px) 6px;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      transition: padding-left 0.2s, background 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .track:last-child { border-bottom: none; }
+    .track:hover {
+      padding-left: 12px;
+      background: rgba(252, 220, 77, 0.04);
+    }
+
+    .track-num {
+      font-family: var(--font-display);
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      color: var(--accent-yellow);
+      padding-right: 16px;
+      min-width: 32px;
+    }
+    .track-name {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 5vw, 1.7rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--fg);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .track-cta {
+      font-family: var(--font-hand);
+      font-size: 1.9rem;
+      color: var(--accent-yellow);
+      padding-left: 14px;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+      transition: color 0.2s;
+    }
+    .track-cta::after {
+      content: "›";
+      font-family: var(--font-display);
+      font-size: 1.4em;
+      line-height: 1;
+      transition: transform 0.2s;
+    }
+    .track:hover .track-cta { color: var(--accent-red); }
+    .track:hover .track-cta::after { transform: translateX(4px); }
+
+    /* ── SIDE B (other releases) ── */
+    .side-b-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: clamp(28px, 7vw, 40px) 0 clamp(14px, 3vw, 20px);
+      font-family: var(--font-hand);
+      font-size: 2rem;
+      color: var(--accent-red);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+    }
+    .side-b-divider::before,
+    .side-b-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-strong), transparent);
+    }
+    .side-b { list-style: none; margin: 0 0 clamp(20px, 5vw, 28px); padding: 0; }
+    .side-b .track {
+      grid-template-columns: auto auto 1fr auto;
+      align-items: center;
+    }
+    .side-b .track-thumb {
+      width: 44px; height: 44px;
+      object-fit: cover;
+      margin-right: 14px;
+      box-shadow: 0 0 0 1px rgba(252,220,77,0.2);
+    }
+
+    /* ── CREDIT FOOTER ── */
+    .credit {
+      margin-top: clamp(28px, 7vw, 40px);
+      padding: clamp(18px, 5vw, 24px) clamp(16px, 4vw, 20px);
+      border: 2px solid var(--border-strong);
+      background: rgba(252, 220, 77, 0.03);
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      line-height: 2;
+    }
+    .credit .credit-name {
+      display: block;
+      font-family: var(--font-hand);
+      font-size: 2.4rem;
+      text-transform: none;
+      letter-spacing: 0.02em;
+      color: var(--accent-yellow);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+      margin-bottom: 6px;
+    }
+    .credit .credit-accent { color: var(--accent-red); }
+
+    /* ── GATE DIALOG ── */
+    dialog.gate-dialog {
+      z-index: 100;
+      width: min(420px, calc(100% - 24px));
+      max-width: calc(100vw - 24px);
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      margin: auto;
+      padding: 0;
+      border: 2px solid var(--border-strong);
+      background: #0d0d0d;
+      color: var(--fg);
+      box-shadow: 0 32px 80px rgba(0,0,0,0.9), 0 0 0 1px rgba(252,220,77,0.08) inset;
+      font-family: var(--font-body);
+    }
+    dialog.gate-dialog::backdrop {
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .gate-inner { padding: 28px 24px 24px; }
+    .gate-eyebrow {
+      font-family: var(--font-hand);
+      font-size: 2rem;
+      color: var(--accent-red);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+      margin-bottom: 10px;
+    }
+    .gate-inner h2 {
+      font-family: var(--font-display);
+      font-size: 2.4rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin: 0 0 8px;
+      color: var(--fg);
+    }
+    .gate-inner .lead {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+    .gate-inner .gate-sig {
+      margin: 0 0 22px;
+      font-family: var(--font-hand);
+      font-size: 2.4rem;
+      color: var(--accent-yellow);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+    }
+    .gate-inner label {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 14px 0 6px;
+    }
+    .gate-inner input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 2px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      transition: border-color 0.15s;
+    }
+    .gate-inner input:focus {
+      outline: none;
+      border-color: var(--accent-yellow);
+    }
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .gate-actions button {
+      flex: 1;
+      padding: 13px 14px;
+      font-family: var(--font-hand);
+      font-size: 2rem;
+      cursor: pointer;
+      border: 2px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      transition: all 0.15s;
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.2);
+    }
+    .gate-actions button:hover { color: var(--fg); border-color: var(--border-strong); }
+    .gate-actions button.primary {
+      border-color: var(--accent-yellow);
+      background: var(--accent-yellow);
+      color: #0a0a0a;
+    }
+    .gate-actions button.primary:hover {
+      background: #0a0a0a;
+      color: var(--accent-yellow);
+    }
+    .gate-actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .gate-cancel-row { margin-top: 12px; text-align: center; }
+    .gate-cancel-row button {
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 8px 12px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .gate-cancel-row button:hover { color: var(--fg); }
+    .gate-err {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      letter-spacing: 0.05em;
+      color: var(--accent-red);
+      margin-top: 10px;
+    }
+
+    /* ── WELCOME VIEW ── */
+    .gate-welcome {
+      display: none;
+      padding: 48px 28px 36px;
+      text-align: center;
+      animation: fadeUp 0.5s ease both;
+    }
+    .gate-welcome.is-on { display: block; }
+    .gate-welcome .welcome-eyebrow {
+      font-family: var(--font-hand);
+      font-size: 1rem;
+      color: var(--accent-red);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+      margin-bottom: 14px;
+    }
+    .gate-welcome h2 {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 9vw, 3rem);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--fg);
+      margin: 0 0 18px;
+      overflow-wrap: anywhere;
+    }
+    .gate-welcome h2 .wn-name { color: var(--accent-yellow); }
+    .gate-welcome .welcome-msg {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--muted);
+      margin: 0 auto 28px;
+      max-width: 30ch;
+    }
+    .gate-welcome .welcome-sig {
+      font-family: var(--font-hand);
+      font-size: 2rem;
+      color: var(--accent-yellow);
+      -webkit-text-stroke: 0.3px rgba(0,0,0,0.3);
+      display: inline-block;
+    }
+    .gate-welcome .welcome-redirect {
+      margin-top: 22px;
+      font-family: var(--font-display);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    @keyframes reveal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  {% if song.cover_art %}
+  <div class="cover-bg" aria-hidden="true">
+    <img src="{{ song.cover_art.url }}" alt="" decoding="async" fetchpriority="high">
+  </div>
+  {% endif %}
+
+  <div class="wrap">
+    <header class="sleeve">
+      <div class="catalog-row">
+        <span class="catalog-num">{{ song.slug|slice:":8"|upper }}</span>
+        <span class="live-mark"><span class="live-dot"></span></span>
+      </div>
+
+      {% if song.cover_art %}
+      <div class="sleeve-stage">
+        <img class="sleeve-cover" src="{{ song.cover_art.url }}" alt="{{ song.title }} cover art" fetchpriority="high">
+      </div>
+      {% endif %}
+
+      <div class="sleeve-titles">
+        <div class="sleeve-eyebrow">A Single{% if artist_display %} · {{ artist_display }}{% endif %}</div>
+        <h1 class="sleeve-title">{{ song.title }}</h1>
+
+        {% if artist_display or owner_social_links %}
+        <div class="sleeve-artist-row">
+          {% if artist_display %}
+          <div class="sleeve-artist">{{ artist_display }}</div>
+          {% endif %}
+          {% if owner_social_links %}
+          <div class="sleeve-follow" aria-label="Follow the artist">
+            {% for s in owner_social_links %}
+            <a href="{{ s.url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ s.label }}">
+              {% if s.key == "instagram" %}<i class="fa-brands fa-instagram"></i>
+              {% elif s.key == "tiktok" %}<i class="fa-brands fa-tiktok"></i>
+              {% else %}<i class="fa-brands fa-youtube"></i>
+              {% endif %}
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if song.description %}
+        <section class="liner">
+          <p>{{ song.description }}</p>
+        </section>
+        {% endif %}
+      </div>
+    </header>
+
+    <div class="content">
+
+      {% if recent_releases %}
+      <div class="side-b-divider">More from {% if artist_display %}{{ artist_display }}{% else %}the artist{% endif %}</div>
+      <ol class="tracklist side-b" aria-label="More releases">
+        {% for other in recent_releases %}
+        <a class="track" href="{% url 'smartlinks:landing' slug=other.slug %}">
+          <span class="track-num">B{{ forloop.counter }}</span>
+          {% if other.cover_art %}
+          <img class="track-thumb" src="{{ other.cover_art.url }}" alt="" width="44" height="44" decoding="async" loading="lazy">
+          {% else %}
+          <span class="track-thumb" aria-hidden="true" style="background:#1a1a1a;"></span>
+          {% endif %}
+          <span class="track-name">{{ other.title }}</span>
+          <span class="track-cta">Open</span>
+        </a>
+        {% endfor %}
+      </ol>
+      {% endif %}
+
+      <div class="tracklist-head">
+        <h2>Pre-Save</h2>
+        <span class="side">Pick a platform</span>
+      </div>
+
+      <ol class="tracklist" aria-label="Streaming platforms">
+        {% for row in platform_rows %}
+          {% if gate_unlocked %}
+          <a class="track" href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}"
+             aria-label="Open on {{ row.platform.label }}">
+            <span class="track-num">{% if forloop.counter < 10 %}0{% endif %}{{ forloop.counter }}</span>
+            <span class="track-name">{{ row.platform.label }}</span>
+            <span class="track-cta">Play</span>
+          </a>
+          {% else %}
+          <a class="track gate-link"
+             href="{% url 'smartlinks:go_platform' slug=song.slug platform=row.platform %}"
+             data-dest-label="{{ row.platform.label }}"
+             data-outbound-url="{{ row.url }}"
+             aria-label="Open on {{ row.platform.label }}">
+            <span class="track-num">{% if forloop.counter < 10 %}0{% endif %}{{ forloop.counter }}</span>
+            <span class="track-name">{{ row.platform.label }}</span>
+            <span class="track-cta">Play</span>
+          </a>
+          {% endif %}
+        {% endfor %}
+      </ol>
+
+      <div class="credit">
+        {% if artist_display %}<span class="credit-name">{{ artist_display }}</span>{% endif %}
+        <span class="credit-accent">For da general public</span> · {% now "Y" %}
+        <br>All rights reserved
+      </div>
+    </div>
+  </div>
+
+  {% if not gate_unlocked %}
+  <dialog id="gate-modal" class="gate-dialog" aria-labelledby="gate-title">
+    <div class="gate-inner" id="gate-form-view">
+      <div class="gate-eyebrow">Join "Those Kids!"</div>
+      <h2 id="gate-title">Wassup&hellip;</h2>
+      <p class="lead" id="gate-lead">Welcome to my close circle&hellip; We&rsquo;re better than everyone.</p>
+      <div class="gate-sig">— That Kid 104!</div>
+      <form id="gate-form" method="post">
+        {% csrf_token %}
+        <label for="gate-name">Name</label>
+        <input id="gate-name" name="name" type="text" autocomplete="name" required placeholder="Your name">
+        <label for="gate-email">Email</label>
+        <input id="gate-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
+        <div class="gate-actions">
+          <button type="button" id="gate-maybe-later">Skip</button>
+          <button type="submit" class="primary" id="gate-submit">Let Me In</button>
+        </div>
+        <div class="gate-cancel-row">
+          <button type="button" id="gate-cancel">Cancel</button>
+        </div>
+        <div class="gate-err" id="gate-errors" hidden></div>
+      </form>
+    </div>
+    <div class="gate-welcome" id="gate-welcome-view" aria-live="polite">
+      <div class="welcome-eyebrow">You're In</div>
+      <h2>Wassup, <span class="wn-name" id="gate-welcome-name">G</span></h2>
+      <p class="welcome-msg">Welcome to the sqaud. New music, drops & shows — you'll know first.</p>
+      <div class="welcome-sig">That Kid 104!</div>
+      <div class="welcome-redirect">Taking you there&hellip;</div>
+    </div>
+  </dialog>
+  <script>
+(function () {
+  const modal = document.getElementById("gate-modal");
+  const form = document.getElementById("gate-form");
+  const errBox = document.getElementById("gate-errors");
+  const cancel = document.getElementById("gate-cancel");
+  let postUrl = "";
+  let outboundUrl = "";
+
+  function showErr(msg) { errBox.textContent = msg; errBox.hidden = !msg; }
+
+  function readCookie(name) {
+    var parts = ("; " + document.cookie).split("; " + name + "=");
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
+  }
+
+  const formView = document.getElementById("gate-form-view");
+  const welcomeView = document.getElementById("gate-welcome-view");
+  const welcomeName = document.getElementById("gate-welcome-name");
+  const titleEl = document.getElementById("gate-title");
+  const nameInput = document.getElementById("gate-name");
+  const DEFAULT_TITLE = "Wassup\u2026";
+
+  function updateTitleFromName() {
+    if (!titleEl) return;
+    const v = (nameInput && nameInput.value || "").trim();
+    if (!v) { titleEl.textContent = DEFAULT_TITLE; return; }
+    const first = v.split(/\s+/)[0];
+    titleEl.textContent = "Wassup " + first;
+  }
+  if (nameInput) nameInput.addEventListener("input", updateTitleFromName);
+
+  function showFormView() {
+    if (formView) formView.style.display = "";
+    if (welcomeView) welcomeView.classList.remove("is-on");
+  }
+  function showWelcomeView(displayName) {
+    if (welcomeName) welcomeName.textContent = displayName || "G";
+    if (formView) formView.style.display = "none";
+    if (welcomeView) welcomeView.classList.add("is-on");
+  }
+
+  function openModal(url, destLabel, directUrl) {
+    postUrl = url;
+    outboundUrl = directUrl || "";
+    var ml = document.getElementById("gate-maybe-later");
+    if (ml) { ml.textContent = outboundUrl ? "Skip" : "Maybe later"; ml.disabled = !outboundUrl; }
+    showErr("");
+    showFormView();
+    var email = document.getElementById("gate-email");
+    var name = document.getElementById("gate-name");
+    var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
+    email.value = ""; name.value = "";
+    updateTitleFromName();
+    if (csrfIn) { var fromCookie = readCookie("csrftoken"); if (fromCookie) csrfIn.value = fromCookie; }
+    try {
+      if (modal && typeof modal.showModal === "function") { modal.showModal(); name.focus(); }
+      else { window.location.href = url; }
+    } catch(err) { window.location.href = url; }
+  }
+
+  document.querySelectorAll("a.gate-link").forEach(function(a) {
+    a.addEventListener("click", function(e) {
+      e.preventDefault();
+      openModal(a.getAttribute("href"), a.dataset.destLabel || "", a.dataset.outboundUrl || "");
+    });
+  });
+
+  window.openGateModal = openModal;
+
+  document.getElementById("gate-maybe-later").addEventListener("click", function() {
+    if (outboundUrl) { if (modal && typeof modal.close === "function") modal.close(); window.location.href = outboundUrl; }
+  });
+
+  cancel.addEventListener("click", function() { if (modal && typeof modal.close === "function") modal.close(); });
+
+  form.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    showErr("");
+    var csrfIn = form.querySelector("input[name=csrfmiddlewaretoken]");
+    var fromCookie = readCookie("csrftoken");
+    if (csrfIn && fromCookie) csrfIn.value = fromCookie;
+    var fd = new FormData(form);
+    var submittedName = (form.querySelector("input[name=name]").value || "").trim();
+    var firstName = submittedName.split(/\s+/)[0] || submittedName;
+    var submitBtn = document.getElementById("gate-submit");
+    submitBtn.disabled = true;
+    try {
+      var r = await fetch(postUrl, { method: "POST", body: fd, headers: { "X-Requested-With": "XMLHttpRequest", "X-CSRFToken": fromCookie || (csrfIn ? csrfIn.value : "") }, credentials: "same-origin" });
+      var data = await r.json().catch(function() { return {}; });
+      if (r.ok && data.redirect) {
+        showWelcomeView(firstName);
+        setTimeout(function () { window.location.href = data.redirect; }, 1800);
+        return;
+      }
+      var parts = [];
+      if (data.errors) { Object.keys(data.errors).forEach(function(k) { (data.errors[k] || []).forEach(function(m) { parts.push(m); }); }); }
+      if (r.status === 403) { showErr("Session expired — refresh and try again."); }
+      else { showErr(parts.length ? parts.join(" ") : "Something went wrong. Try again."); }
+    } catch(ex) { showErr("Network error. Try again."); }
+    finally { submitBtn.disabled = false; }
+  });
+})();
+  </script>
+  {% endif %}
+</body>
+</html>
