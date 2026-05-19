@@ -20,7 +20,7 @@ class MusicPlatform(models.TextChoices):
 class LandingTemplate(models.TextChoices):
     MODERN = "modern", "Modern"
     MINIMAL = "minimal", "Minimal"
-    PRE-SAVE = "pre-save", "Pre-Save"
+    PRESAVE104 = "presave104", "Presave104"
 
 
 class Song(models.Model):
